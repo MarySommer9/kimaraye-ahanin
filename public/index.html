@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="پنل مدیریت کیمارای آهنین - مدیریت کاربران و پروکسی شبکه">
+  <title>🦁 کیمارای آهنین | پنل مدیریت</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       طراحی کلی - Dark Mode با رنگ‌بندی طلایی
+    ============================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #f5c518;
+      --gold-dark:   #c9a800;
+      --gold-glow:   rgba(245,197,24,0.18);
+      --bg:          #080810;
+      --bg-card:     #10101e;
+      --bg-input:    #1a1a2e;
+      --bg-table:    #0d0d1a;
+      --border:      rgba(245,197,24,0.2);
+      --text:        #e8e8f0;
+      --text-muted:  #7070a0;
+      --success:     #22c55e;
+      --danger:      #ef4444;
+      --warning:     #f59e0b;
+      --info:        #3b82f6;
+      --radius:      10px;
+      --radius-lg:   16px;
+      --shadow:      0 4px 24px rgba(0,0,0,0.5);
+      --glow:        0 0 20px rgba(245,197,24,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at 10% 10%, rgba(245,197,24,0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 90% 90%, rgba(59,130,246,0.04) 0%, transparent 50%);
+    }
+
+    /* ============================================
+       صفحه‌ی ورود
+    ============================================ */
+    #loginPage {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: var(--shadow), var(--glow);
+      animation: fadeIn 0.4s ease;
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-logo .lion { font-size: 52px; line-height: 1; }
+    .login-logo h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--gold);
+      margin-top: 10px;
+      letter-spacing: 0.5px;
+    }
+    .login-logo p { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+
+    /* ============================================
+       فرم‌ها و ورودی‌ها
+    ============================================ */
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .form-control {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      padding: 10px 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .form-control:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-glow);
+    }
+    .form-control::placeholder { color: var(--text-muted); opacity: 0.6; }
+
+    select.form-control option { background: var(--bg-input); }
+
+    /* ============================================
+       دکمه‌ها
+    ============================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: var(--radius);
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #000;
+    }
+    .btn-primary:hover { box-shadow: 0 4px 16px rgba(245,197,24,0.35); filter: brightness(1.08); }
+
+    .btn-full { width: 100%; justify-content: center; padding: 12px; font-size: 15px; }
+
+    .btn-danger  { background: rgba(239,68,68,0.15);  color: var(--danger);  border: 1px solid rgba(239,68,68,0.3); }
+    .btn-success { background: rgba(34,197,94,0.15);  color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
+    .btn-info    { background: rgba(59,130,246,0.15); color: var(--info);    border: 1px solid rgba(59,130,246,0.3); }
+    .btn-ghost   { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+
+    .btn-danger:hover  { background: rgba(239,68,68,0.25);  }
+    .btn-success:hover { background: rgba(34,197,94,0.25);  }
+    .btn-info:hover    { background: rgba(59,130,246,0.25); }
+    .btn-ghost:hover   { border-color: var(--gold); color: var(--gold); }
+
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* ============================================
+       ناوبری و هدر
+    ============================================ */
+    #appPage { display: none; flex-direction: column; min-height: 100vh; }
+
+    .topbar {
+      background: rgba(16,16,30,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .topbar-brand span { color: var(--text-muted); font-size: 13px; font-weight: 400; }
+
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-success { background: rgba(34,197,94,0.15); color: var(--success); }
+    .badge-danger  { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+    /* ============================================
+       محتوای اصلی
+    ============================================ */
+    .main-content { flex: 1; padding: 28px 24px; max-width: 1280px; margin: 0 auto; width: 100%; }
+
+    /* ============================================
+       کارت‌های آمار
+    ============================================ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--glow); }
+
+    .stat-icon {
+      width: 48px; height: 48px;
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .stat-icon.gold    { background: rgba(245,197,24,0.12); }
+    .stat-icon.green   { background: rgba(34,197,94,0.12); }
+    .stat-icon.blue    { background: rgba(59,130,246,0.12); }
+    .stat-icon.red     { background: rgba(239,68,68,0.12); }
+
+    .stat-value { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+    /* ============================================
+       بخش جدول کاربران
+    ============================================ */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .section-title span { color: var(--text-muted); font-size: 13px; font-weight: 400; margin-right: 8px; }
+
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-box input {
+      padding-right: 36px;
+      width: 220px;
+    }
+    .search-box .icon {
+      position: absolute;
+      right: 12px;
+      color: var(--text-muted);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    /* ============================================
+       جدول
+    ============================================ */
+    .table-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      overflow-x: auto;
+    }
+
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+
+    thead th {
+      background: var(--bg-table);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 12px 16px;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.15s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(245,197,24,0.03); }
+
+    tbody td {
+      padding: 12px 16px;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+
+    .td-uuid {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .protocol-badge {
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .pb-vless       { background: rgba(59,130,246,0.2);  color: #60a5fa; }
+    .pb-trojan      { background: rgba(168,85,247,0.2);  color: #c084fc; }
+    .pb-shadowsocks { background: rgba(234,88,12,0.2);   color: #fb923c; }
+    .pb-reality     { background: rgba(245,197,24,0.2);  color: var(--gold); }
+
+    .progress-bar {
+      background: var(--bg-input);
+      border-radius: 4px;
+      height: 6px;
+      width: 80px;
+      overflow: hidden;
+      margin-top: 3px;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--gold), #ff9f00);
+      transition: width 0.4s ease;
+    }
+    .progress-fill.danger { background: linear-gradient(90deg, var(--danger), #ff6060); }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-left: 6px;
+    }
+    .status-dot.active   { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .status-dot.inactive { background: var(--danger); }
+
+    /* ============================================
+       Modal
+    ============================================ */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: var(--shadow);
+      animation: slideUp 0.25s ease;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .modal-title { font-size: 17px; font-weight: 700; color: var(--gold); }
+    .modal-close {
+      background: none; border: none;
+      color: var(--text-muted); font-size: 20px;
+      cursor: pointer; line-height: 1;
+      transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      justify-content: flex-end;
+    }
+
+    /* ============================================
+       نوتیفیکیشن Toast
+    ============================================ */
+    #toastContainer {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow);
+      animation: slideInLeft 0.3s ease;
+      max-width: 320px;
+      border: 1px solid transparent;
+    }
+    .toast.success { background: rgba(22,163,74,0.95);  color: #fff; border-color: rgba(34,197,94,0.4); }
+    .toast.error   { background: rgba(185,28,28,0.95);  color: #fff; border-color: rgba(239,68,68,0.4); }
+    .toast.info    { background: rgba(29,78,216,0.95);  color: #fff; border-color: rgba(59,130,246,0.4); }
+    .toast.warning { background: rgba(180,83,9,0.95);   color: #fff; border-color: rgba(245,158,11,0.4); }
+
+    /* ============================================
+       حالت بارگذاری
+    ============================================ */
+    .loading-spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(245,197,24,0.3);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg,
+        var(--bg-input) 25%,
+        rgba(255,255,255,0.04) 50%,
+        var(--bg-input) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+    }
+
+    /* ============================================
+       فوتر
+    ============================================ */
+    footer {
+      text-align: center;
+      padding: 16px;
+      color: var(--text-muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--gold); text-decoration: none; }
+
+    /* ============================================
+       کپی کلیپبورد
+    ============================================ */
+    .copy-btn {
+      background: none; border: none;
+      color: var(--text-muted); cursor: pointer;
+      font-size: 12px; padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.2s, background 0.2s;
+      vertical-align: middle;
+    }
+    .copy-btn:hover { color: var(--gold); background: var(--gold-glow); }
+
+    /* ============================================
+       خالی بودن جدول
+    ============================================ */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ============================================
+       انیمیشن‌ها
+    ============================================ */
+    @keyframes fadeIn    { from { opacity: 0; }                       to { opacity: 1; } }
+    @keyframes slideUp   { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes spin      { to   { transform: rotate(360deg); } }
+    @keyframes shimmer   { to   { background-position: -200% 0; } }
+
+    /* ============================================
+       واکنش‌گرا (Responsive)
+    ============================================ */
+    @media (max-width: 640px) {
+      .topbar { padding: 0 16px; }
+      .main-content { padding: 16px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .section-header { flex-direction: column; align-items: flex-start; }
+      .search-box input { width: 100%; }
+      .modal-card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== صفحه‌ی ورود ==================== -->
+  <div id="loginPage">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="lion">🦁</div>
+        <h1>کیمارای آهنین</h1>
+        <p>پنل مدیریت شبکه</p>
+      </div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="adminTokenInput">توکن مدیریت</label>
+          <input
+            type="password"
+            id="adminTokenInput"
+            class="form-control"
+            placeholder="توکن ادمین را وارد کنید…"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+          <span>ورود به پنل</span>
+        </button>
+      </form>
+
+      <p id="loginError" style="color:var(--danger);font-size:13px;margin-top:12px;text-align:center;display:none;">
+        توکن نادرست است. دوباره تلاش کنید.
+      </p>
+    </div>
+  </div>
+
+  <!-- ==================== اپلیکیشن اصلی ==================== -->
+  <div id="appPage">
+    <!-- هدر -->
+    <header class="topbar">
+      <div class="topbar-brand">
+        🦁
+        <div>
+          کیمارای آهنین
+          <br>
+          <span>پنل مدیریت</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span class="badge badge-success" id="connectionBadge">● متصل</span>
+        <button class="btn btn-ghost btn-sm" onclick="logout()" id="logoutBtn">خروج</button>
+      </div>
+    </header>
+
+    <!-- محتوای اصلی -->
+    <main class="main-content">
+
+      <!-- کارت‌های آمار -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-icon gold">👥</div>
+          <div>
+            <div class="stat-value" id="statTotal">-</div>
+            <div class="stat-label">کل کاربران</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">✅</div>
+          <div>
+            <div class="stat-value" id="statActive">-</div>
+            <div class="stat-label">کاربران فعال</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">📡</div>
+          <div>
+            <div class="stat-value" id="statUsage">-</div>
+            <div class="stat-label">مصرف کل (GB)</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">⚠️</div>
+          <div>
+            <div class="stat-value" id="statExpired">-</div>
+            <div class="stat-label">منقضی‌شده</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- هدر جدول -->
+      <div class="section-header">
+        <div class="section-title">
+          مدیریت کاربران
+          <span id="userCountLabel"></span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div class="search-box">
+            <input
+              type="search"
+              id="searchInput"
+              class="form-control"
+              placeholder="جستجوی کاربران…"
+              oninput="filterTable()"
+            >
+            <span class="icon">🔍</span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()" id="addUserBtn">
+            ➕ افزودن کاربر
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="loadUsers()" id="refreshBtn">
+            🔄
+          </button>
+        </div>
+      </div>
+
+      <!-- جدول کاربران -->
+      <div class="table-wrapper">
+        <table id="usersTable">
+          <thead>
+            <tr>
+              <th>کاربر</th>
+              <th>UUID</th>
+              <th>پروتکل</th>
+              <th>مصرف / سهمیه</th>
+              <th>انقضا</th>
+              <th>وضعیت</th>
+              <th>عملیات</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody">
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <div class="loading-spinner" style="width:28px;height:28px;margin:0 auto 10px;"></div>
+                  <p>در حال بارگذاری…</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </main>
+
+    <footer>
+      🦁 کیمارای آهنین &nbsp;|&nbsp; ساخته‌شده با ❤️ برای آموزش &nbsp;|&nbsp;
+      <a href="https://github.com/MarySommer9/kimaraye-ahanin" target="_blank">GitHub</a>
+    </footer>
+  </div>
+
+  <!-- ==================== Modal افزودن کاربر ==================== -->
+  <div class="modal-overlay" id="addUserModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">➕ افزودن کاربر جدید</div>
+        <button class="modal-close" onclick="closeModal('addUserModal')">✕</button>
+      </div>
+      <form id="addUserForm" onsubmit="submitAddUser(event)">
+        <div class="form-group">
+          <label for="newUsername">نام کاربری *</label>
+          <input type="text" id="newUsername" class="form-control" placeholder="مثال: john_doe" required>
+        </div>
+        <div class="form-group">
+          <label for="newUUID">UUID <span style="color:var(--text-muted);font-size:11px;">(اختیاری - خودکار تولید می‌شود)</span></label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="newUUID" class="form-control" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="generateUUID()" style="white-space:nowrap;">تولید</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="newPassword">رمز عبور <span style="color:var(--text-muted);font-size:11px;">(اختیاری)</span></label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="newPassword" class="form-control" placeholder="رمز عبور Trojan/Shadowsocks">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="generatePassword()" style="white-space:nowrap;">تولید</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label for="newProtocol">پروتکل</label>
+            <select id="newProtocol" class="form-control">
+              <option value="vless">VLESS</option>
+              <option value="trojan">Trojan</option>
+              <option value="shadowsocks">Shadowsocks</option>
+              <option value="reality">Reality</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="newQuota">سهمیه (GB)</label>
+            <input type="number" id="newQuota" class="form-control" value="10" min="0" step="0.5">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="newExpires">روزهای اعتبار (۰ = نامحدود)</label>
+          <input type="number" id="newExpires" class="form-control" value="30" min="0">
+        </div>
+        <div class="form-group">
+          <label for="newRemark">یادداشت</label>
+          <input type="text" id="newRemark" class="form-control" placeholder="اختیاری…">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('addUserModal')">انصراف</button>
+          <button type="submit" class="btn btn-primary" id="addUserSubmitBtn">ثبت کاربر</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== Modal ویرایش کاربر ==================== -->
+  <div class="modal-overlay" id="editUserModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">✏️ ویرایش کاربر</div>
+        <button class="modal-close" onclick="closeModal('editUserModal')">✕</button>
+      </div>
+      <form id="editUserForm" onsubmit="submitEditUser(event)">
+        <input type="hidden" id="editUUID">
+        <div class="form-group">
+          <label>UUID</label>
+          <input type="text" id="editUUIDDisplay" class="form-control" readonly style="opacity:0.5;cursor:not-allowed;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label for="editProtocol">پروتکل</label>
+            <select id="editProtocol" class="form-control">
+              <option value="vless">VLESS</option>
+              <option value="trojan">Trojan</option>
+              <option value="shadowsocks">Shadowsocks</option>
+              <option value="reality">Reality</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editQuota">سهمیه (GB)</label>
+            <input type="number" id="editQuota" class="form-control" min="0" step="0.5">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="editIsActive">وضعیت</label>
+          <select id="editIsActive" class="form-control">
+            <option value="1">فعال</option>
+            <option value="0">غیرفعال</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="editRemark">یادداشت</label>
+          <input type="text" id="editRemark" class="form-control">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('editUserModal')">انصراف</button>
+          <button type="submit" class="btn btn-primary" id="editUserSubmitBtn">ذخیره تغییرات</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== Modal لینک اشتراک ==================== -->
+  <div class="modal-overlay" id="subModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">🔗 لینک‌های اشتراک</div>
+        <button class="modal-close" onclick="closeModal('subModal')">✕</button>
+      </div>
+      <div id="subLinksContent"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('subModal')">بستن</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Toast ==================== -->
+  <div id="toastContainer"></div>
+
+  <!-- ==================== اسکریپت ==================== -->
+  <script>
+    'use strict';
+
+    // ==================== وضعیت اپ ====================
+    let adminToken  = '';
+    let allUsers    = [];
+    const API_BASE  = '/admin/api';
+
+    // ==================== ورود ====================
+    async function handleLogin(e) {
+      e.preventDefault();
+      const token = document.getElementById('adminTokenInput').value.trim();
+      if (!token) return;
+
+      const btn = document.getElementById('loginBtn');
+      btn.innerHTML = '<span class="loading-spinner"></span> در حال بررسی…';
+      btn.disabled  = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/users`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        if (res.ok) {
+          adminToken = token;
+          document.getElementById('loginPage').style.display = 'none';
+          document.getElementById('appPage').style.display    = 'flex';
+          document.getElementById('loginError').style.display = 'none';
+          await loadUsers();
+        } else {
+          document.getElementById('loginError').style.display = 'block';
+          document.getElementById('adminTokenInput').value    = '';
+        }
+      } catch {
+        showToast('خطا در اتصال به سرور', 'error');
+      } finally {
+        btn.innerHTML = '<span>ورود به پنل</span>';
+        btn.disabled  = false;
+      }
+    }
+
+    function logout() {
+      adminToken = '';
+      allUsers   = [];
+      document.getElementById('appPage').style.display    = 'none';
+      document.getElementById('loginPage').style.display  = 'flex';
+      document.getElementById('adminTokenInput').value    = '';
+    }
+
+    // ==================== بارگذاری کاربران ====================
+    async function loadUsers() {
+      const btn = document.getElementById('refreshBtn');
+      btn.innerHTML = '<span class="loading-spinner"></span>';
+      btn.disabled  = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/users`, {
+          headers: { 'Authorization': 'Bearer ' + adminToken }
+        });
+
+        if (!res.ok) {
+          if (res.status === 401) { logout(); return; }
+          throw new Error(`خطای سرور: ${res.status}`);
+        }
+
+        allUsers = await res.json();
+        renderUsers(allUsers);
+        renderStats(allUsers);
+        document.getElementById('userCountLabel').textContent = `(${allUsers.length} کاربر)`;
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.innerHTML = '🔄';
+        btn.disabled  = false;
+      }
+    }
+
+    // ==================== رندر کاربران ====================
+    function renderUsers(users) {
+      const tbody  = document.getElementById('usersBody');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const list   = search
+        ? users.filter(u =>
+            (u.username||'').toLowerCase().includes(search) ||
+            (u.uuid||'').toLowerCase().includes(search) ||
+            (u.remark||'').toLowerCase().includes(search))
+        : users;
+
+      if (!list.length) {
+        tbody.innerHTML = `
+          <tr><td colspan="7">
+            <div class="empty-state">
+              <div class="icon">👥</div>
+              <p>هیچ کاربری یافت نشد</p>
+            </div>
+          </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(u => {
+        const usedPct   = u.quota > 0 ? Math.min((u.used / u.quota) * 100, 100) : 0;
+        const isDanger  = usedPct >= 80;
+        const expires   = u.expires_at
+          ? (u.expires_at < Date.now()
+              ? `<span style="color:var(--danger)">منقضی</span>`
+              : new Date(u.expires_at).toLocaleDateString('fa-IR'))
+          : '<span style="color:var(--text-muted)">نامحدود</span>';
+
+        return `
+        <tr id="row-${u.uuid}">
+          <td>
+            <div style="font-weight:600;">${esc(u.username)}</div>
+            ${u.remark ? `<div style="font-size:11px;color:var(--text-muted)">${esc(u.remark)}</div>` : ''}
+          </td>
+          <td>
+            <div class="td-uuid" title="${esc(u.uuid)}">${esc(u.uuid)}</div>
+            <button class="copy-btn" onclick="copyText('${u.uuid}')" title="کپی UUID">📋</button>
+          </td>
+          <td>
+            <span class="protocol-badge pb-${u.protocol}">${u.protocol}</span>
+          </td>
+          <td>
+            <div style="font-size:12px;color:var(--text-muted);">
+              ${(u.used||0).toFixed(2)} / ${u.quota > 0 ? u.quota + ' GB' : '∞'}
+            </div>
+            ${u.quota > 0 ? `
+            <div class="progress-bar">
+              <div class="progress-fill${isDanger?' danger':''}" style="width:${usedPct}%"></div>
+            </div>` : ''}
+          </td>
+          <td style="font-size:12px;">${expires}</td>
+          <td>
+            <span class="status-dot ${u.is_active ? 'active' : 'inactive'}"></span>
+            ${u.is_active ? 'فعال' : 'غیرفعال'}
+          </td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn btn-info btn-sm" onclick="openSubModal('${u.uuid}','${esc(u.password||'')}')">🔗</button>
+              <button class="btn btn-success btn-sm" onclick="openEditModal(${JSON.stringify(u).replace(/"/g,'&quot;')})">✏️</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.uuid}','${esc(u.username)}')">🗑️</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ==================== آمار ====================
+    function renderStats(users) {
+      const now     = Date.now();
+      const active  = users.filter(u => u.is_active).length;
+      const expired = users.filter(u => u.expires_at && u.expires_at < now && u.expires_at !== 0).length;
+      const usage   = users.reduce((s, u) => s + (u.used || 0), 0);
+
+      animateNumber('statTotal',   users.length);
+      animateNumber('statActive',  active);
+      animateNumber('statExpired', expired);
+      document.getElementById('statUsage').textContent = usage.toFixed(2);
+    }
+
+    function animateNumber(id, target) {
+      const el    = document.getElementById(id);
+      const start = parseInt(el.textContent) || 0;
+      const diff  = target - start;
+      const steps = 20;
+      let i = 0;
+      const timer = setInterval(() => {
+        i++;
+        el.textContent = Math.round(start + diff * (i / steps));
+        if (i >= steps) clearInterval(timer);
+      }, 20);
+    }
+
+    // ==================== جستجو ====================
+    function filterTable() { renderUsers(allUsers); }
+
+    // ==================== Modal‌ها ====================
+    function openModal(id)  { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    function openAddModal() {
+      document.getElementById('addUserForm').reset();
+      openModal('addUserModal');
+    }
+
+    function openEditModal(user) {
+      document.getElementById('editUUID').value        = user.uuid;
+      document.getElementById('editUUIDDisplay').value = user.uuid;
+      document.getElementById('editProtocol').value    = user.protocol;
+      document.getElementById('editQuota').value       = user.quota;
+      document.getElementById('editIsActive').value    = user.is_active;
+      document.getElementById('editRemark').value      = user.remark || '';
+      openModal('editUserModal');
+    }
+
+    // ==================== افزودن کاربر ====================
+    async function submitAddUser(e) {
+      e.preventDefault();
+      const btn   = document.getElementById('addUserSubmitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span>';
+
+      const expiresVal = parseInt(document.getElementById('newExpires').value) || 0;
+      const data = {
+        username:   document.getElementById('newUsername').value.trim(),
+        uuid:       document.getElementById('newUUID').value.trim()     || undefined,
+        password:   document.getElementById('newPassword').value.trim() || undefined,
+        protocol:   document.getElementById('newProtocol').value,
+        quota:      parseFloat(document.getElementById('newQuota').value) || 10,
+        expires_at: expiresVal > 0 ? Date.now() + expiresVal * 86400000 : 0,
+        remark:     document.getElementById('newRemark').value.trim(),
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/users`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + adminToken,
+          },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        closeModal('addUserModal');
+        showToast(`کاربر «${data.username}» با موفقیت ایجاد شد`, 'success');
+        await loadUsers();
+      } catch (err) {
+        showToast('خطا در ایجاد کاربر: ' + err.message, 'error');
+      } finally {
+        btn.disabled  = false;
+        btn.innerHTML = 'ثبت کاربر';
+      }
+    }
+
+    // ==================== ویرایش کاربر ====================
+    async function submitEditUser(e) {
+      e.preventDefault();
+      const uuid = document.getElementById('editUUID').value;
+      const btn  = document.getElementById('editUserSubmitBtn');
+      btn.disabled  = true;
+      btn.innerHTML = '<span class="loading-spinner"></span>';
+
+      const updates = {
+        protocol:  document.getElementById('editProtocol').value,
+        quota:     parseFloat(document.getElementById('editQuota').value) || 10,
+        is_active: parseInt(document.getElementById('editIsActive').value),
+        remark:    document.getElementById('editRemark').value.trim(),
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/users/${uuid}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + adminToken,
+          },
+          body: JSON.stringify(updates),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        closeModal('editUserModal');
+        showToast('تغییرات با موفقیت ذخیره شد', 'success');
+        await loadUsers();
+      } catch (err) {
+        showToast('خطا در ویرایش: ' + err.message, 'error');
+      } finally {
+        btn.disabled  = false;
+        btn.innerHTML = 'ذخیره تغییرات';
+      }
+    }
+
+    // ==================== حذف کاربر ====================
+    async function deleteUser(uuid, username) {
+      if (!confirm(`آیا از حذف کاربر «${username}» مطمئن هستید؟\nاین عملیات قابل بازگشت نیست.`)) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/users/${uuid}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + adminToken },
+        });
+        if (!res.ok) throw new Error(await res.text());
+        showToast(`کاربر «${username}» حذف شد`, 'warning');
+        await loadUsers();
+      } catch (err) {
+        showToast('خطا در حذف: ' + err.message, 'error');
+      }
+    }
+
+    // ==================== Modal لینک اشتراک ====================
+    function openSubModal(uuid, password) {
+      const host = window.location.host;
+      const links = [
+        {
+          label: 'VLESS',
+          value: `vless://${uuid}@${host}:443?encryption=none&security=tls&sni=${host}&fp=randomized&type=ws&host=${host}&path=%2Fproxy%2Fvless%3Fuuid%3D${uuid}%26ed%3D2048#Kimaraye-VLESS`,
+        },
+        {
+          label: 'Trojan',
+          value: `trojan://${password}@${host}:443?security=tls&sni=${host}&fp=randomized&type=ws&host=${host}&path=%2Fproxy%2Ftrojan%3Fuuid%3D${uuid}%26ed%3D2048#Kimaraye-Trojan`,
+        },
+        {
+          label: 'Sing-box JSON',
+          value: `/sub?uuid=${uuid}&format=singbox`,
+          isUrl: true,
+        },
+        {
+          label: 'Clash YAML',
+          value: `/sub?uuid=${uuid}&format=clash`,
+          isUrl: true,
+        },
+        {
+          label: 'V2Ray JSON',
+          value: `/sub?uuid=${uuid}&format=v2ray`,
+          isUrl: true,
+        },
+      ];
+
+      document.getElementById('subLinksContent').innerHTML = links.map(l => `
+        <div style="margin-bottom:14px;">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">${l.label}</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input
+              type="text"
+              class="form-control"
+              value="${l.isUrl ? window.location.origin + l.value : l.value}"
+              readonly
+              onclick="this.select()"
+              style="font-size:11px;font-family:monospace;"
+            >
+            <button class="btn btn-ghost btn-sm" onclick="copyText(this.previousElementSibling.value)">📋</button>
+          </div>
+        </div>
+      `).join('');
+
+      openModal('subModal');
+    }
+
+    // ==================== ابزارها ====================
+    function generateUUID() {
+      const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+      document.getElementById('newUUID').value = uuid;
+    }
+
+    function generatePassword() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$';
+      const arr   = new Uint8Array(20);
+      crypto.getRandomValues(arr);
+      document.getElementById('newPassword').value =
+        Array.from(arr, v => chars[v % chars.length]).join('');
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('کپی شد!', 'success');
+      } catch {
+        showToast('خطا در کپی', 'error');
+      }
+    }
+
+    function esc(str) {
+      return String(str || '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
+    }
+
+    // ==================== Toast ====================
+    function showToast(message, type = 'info') {
+      const icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
+      const el    = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `<span>${icons[type]||''}</span><span>${message}</span>`;
+      document.getElementById('toastContainer').appendChild(el);
+      setTimeout(() => {
+        el.style.opacity   = '0';
+        el.style.transform = 'translateX(-20px)';
+        el.style.transition = 'all 0.3s ease';
+        setTimeout(() => el.remove(), 300);
+      }, 3000);
+    }
+
+    // ==================== بستن Modal با Escape ====================
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        ['addUserModal','editUserModal','subModal'].forEach(closeModal);
+      }
+    });
+
+    // ==================== بستن Modal با کلیک بیرون ====================
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) overlay.classList.remove('open');
+      });
+    });
+  </script>
+</body>
+</html>
