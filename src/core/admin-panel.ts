@@ -1,5 +1,5 @@
 // ============================================
-// 🦁 کیمارای آهنین - پنل مدیریت حرفه‌ای
+// 🦁 کیمارای آهنین - پنل مدیریت (نسخه نهایی با کانفیگ)
 // ============================================
 
 import { Env, User } from '../types';
@@ -8,7 +8,7 @@ import { listUsers, createUser, updateUser, deleteUser } from './auth';
 export async function adminAPI(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
 
-  // ===== تغییر ۱: احراز هویت اصلاح‌شده =====
+  // ===== احراز هویت =====
   const envToken = env.ADMIN_TOKEN;
   const kvToken = await env.KV?.get('admin_token');
   const expectedToken = envToken || kvToken || 'admin123';
@@ -60,7 +60,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     }
   }
 
-  // ===== صفحه HTML با فونت وزیر =====
+  // ===== صفحه HTML =====
   return new Response(`<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -70,7 +70,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
   <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
       background: #0b0b12;
@@ -82,7 +81,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       align-items: flex-start;
       direction: rtl;
     }
-
     .container {
       max-width: 1400px;
       width: 100%;
@@ -92,10 +90,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       padding: 28px 32px;
       border: 1px solid rgba(255, 204, 0, 0.07);
       box-shadow: 0 30px 70px rgba(0, 0, 0, 0.65);
-      transition: all 0.2s ease;
     }
-
-    /* ===== هدر ===== */
     .header {
       display: flex;
       justify-content: space-between;
@@ -106,7 +101,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       flex-wrap: wrap;
       gap: 12px;
     }
-
     .logo {
       font-size: 28px;
       font-weight: 800;
@@ -114,24 +108,16 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       display: flex;
       align-items: center;
       gap: 8px;
-      letter-spacing: -0.5px;
     }
     .logo span { color: #ffaa00; font-weight: 300; }
-
     .badge {
       background: rgba(0, 255, 100, 0.10);
       color: #0f0;
       padding: 6px 20px;
       border-radius: 40px;
       font-size: 13px;
-      font-weight: 500;
       border: 1px solid rgba(0, 255, 100, 0.12);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
     }
-
-    /* ===== نوار توکن ===== */
     .token-bar {
       background: rgba(255, 204, 0, 0.05);
       border: 1px solid rgba(255, 204, 0, 0.10);
@@ -145,10 +131,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       font-size: 14px;
       color: #c0c0d0;
     }
-    .token-bar strong {
-      color: #ffcc00;
-      font-weight: 600;
-    }
+    .token-bar strong { color: #ffcc00; }
     .token-bar .token-value {
       background: #0e0e1a;
       padding: 4px 14px;
@@ -164,14 +147,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .token-bar .btn-group {
-      display: flex;
-      gap: 8px;
-      margin-right: auto;
-      flex-wrap: wrap;
-    }
-
-    /* ===== دکمه‌ها ===== */
+    .token-bar .btn-group { display: flex; gap: 8px; margin-right: auto; flex-wrap: wrap; }
     .btn {
       padding: 10px 22px;
       background: #ffcc00;
@@ -187,31 +163,13 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       align-items: center;
       gap: 6px;
       box-shadow: 0 4px 14px rgba(255, 204, 0, 0.12);
-      text-decoration: none;
-      white-space: nowrap;
     }
-    .btn:hover { transform: translateY(-2px); background: #ffe066; box-shadow: 0 8px 28px rgba(255, 204, 0, 0.20); }
-    .btn:active { transform: translateY(0); }
-
-    .btn-outline {
-      background: transparent;
-      color: #ccc;
-      border: 1px solid #3a3a4e;
-      box-shadow: none;
-    }
+    .btn:hover { transform: translateY(-2px); background: #ffe066; }
+    .btn-outline { background: transparent; color: #ccc; border: 1px solid #3a3a4e; box-shadow: none; }
     .btn-outline:hover { background: #1a1a2e; border-color: #ffcc00; color: #fff; }
-
-    .btn-danger {
-      background: #dc3545;
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(220, 53, 69, 0.15);
-    }
-    .btn-danger:hover { background: #c82333; box-shadow: 0 8px 28px rgba(220, 53, 69, 0.25); }
-
+    .btn-danger { background: #dc3545; color: #fff; }
+    .btn-danger:hover { background: #c82333; }
     .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 30px; }
-    .btn-xs { padding: 4px 10px; font-size: 11px; border-radius: 30px; }
-
-    /* ===== نوار ابزار ===== */
     .toolbar {
       display: flex;
       gap: 12px;
@@ -230,24 +188,10 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       font-family: inherit;
       font-size: 14px;
       outline: none;
-      transition: border 0.2s;
     }
     .toolbar .search-box:focus { border-color: #ffcc00; }
-    .toolbar .search-box::placeholder { color: #5a5a72; }
-
-    /* ===== جدول ===== */
-    .table-wrap {
-      overflow-x: auto;
-      border-radius: 16px;
-      border: 1px solid #1a1a2e;
-      background: rgba(0, 0, 0, 0.25);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-      min-width: 720px;
-    }
+    .table-wrap { overflow-x: auto; border-radius: 16px; border: 1px solid #1a1a2e; background: rgba(0, 0, 0, 0.25); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 720px; }
     th {
       background: #14141f;
       color: #ffcc00;
@@ -255,18 +199,14 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       padding: 14px 12px;
       text-align: center;
       border-bottom: 2px solid #2a2a40;
-      font-size: 13px;
-      letter-spacing: 0.3px;
     }
     td {
       padding: 12px 10px;
       text-align: center;
       border-bottom: 1px solid #19192a;
       color: #d0d0e0;
-      vertical-align: middle;
     }
     tr:hover td { background: #161625; }
-
     .uuid-cell {
       font-family: 'Courier New', monospace;
       font-size: 12px;
@@ -277,7 +217,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-
     .status-badge {
       display: inline-block;
       padding: 3px 14px;
@@ -287,16 +226,8 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     }
     .status-active { background: rgba(0, 255, 100, 0.10); color: #0f0; border: 1px solid rgba(0, 255, 100, 0.08); }
     .status-expired { background: rgba(255, 70, 70, 0.10); color: #ff5555; border: 1px solid rgba(255, 70, 70, 0.08); }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #5a5a72;
-      font-size: 15px;
-    }
+    .empty-state { text-align: center; padding: 60px 20px; color: #5a5a72; font-size: 15px; }
     .empty-state span { font-size: 48px; display: block; margin-bottom: 12px; }
-
-    /* ===== مودال ===== */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -309,39 +240,25 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       padding: 20px;
     }
     .modal-overlay.open { display: flex; }
-
     .modal {
       background: #1a1a2e;
       border-radius: 28px;
       padding: 32px 36px;
-      max-width: 520px;
+      max-width: 560px;
       width: 100%;
       border: 1px solid rgba(255, 204, 0, 0.06);
       box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7);
       animation: modalFade 0.25s ease;
+      max-height: 90vh;
+      overflow-y: auto;
     }
     @keyframes modalFade {
       from { opacity: 0; transform: scale(0.94) translateY(16px); }
       to   { opacity: 1; transform: scale(1) translateY(0); }
     }
-
-    .modal h3 {
-      color: #ffcc00;
-      font-size: 22px;
-      margin-bottom: 22px;
-      text-align: center;
-      font-weight: 700;
-    }
-
-    .modal label {
-      display: block;
-      color: #a0a0b8;
-      font-size: 13px;
-      margin-bottom: 4px;
-      margin-top: 14px;
-      font-weight: 500;
-    }
-    .modal input, .modal select {
+    .modal h3 { color: #ffcc00; font-size: 22px; margin-bottom: 22px; text-align: center; font-weight: 700; }
+    .modal label { display: block; color: #a0a0b8; font-size: 13px; margin-bottom: 4px; margin-top: 14px; font-weight: 500; }
+    .modal input, .modal select, .modal textarea {
       width: 100%;
       padding: 10px 16px;
       background: #0e0e1a;
@@ -351,17 +268,37 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       font-size: 14px;
       font-family: inherit;
       outline: none;
-      transition: border 0.2s;
     }
-    .modal input:focus, .modal select:focus { border-color: #ffcc00; box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.05); }
-    .modal .modal-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
-    }
+    .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: #ffcc00; }
+    .modal .modal-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
     .modal .modal-actions .btn { flex: 1; justify-content: center; }
-
-    /* ===== Toast ===== */
+    .modal .config-box {
+      background: #0a0a12;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin: 6px 0;
+      direction: ltr;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #aaffaa;
+      word-break: break-all;
+      border: 1px solid #2a2a40;
+      position: relative;
+    }
+    .modal .copy-btn {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      background: #2a2a40;
+      border: none;
+      color: #aaa;
+      padding: 2px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .modal .copy-btn:hover { background: #3a3a50; color: #fff; }
+    .modal .config-label { color: #ffcc00; font-size: 13px; margin-top: 12px; display: block; }
     .toast-container {
       position: fixed;
       bottom: 30px;
@@ -384,7 +321,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       transform: translateX(50px) scale(0.94);
       transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
       width: fit-content;
       min-width: 180px;
     }
@@ -392,8 +328,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     .toast-success { background: rgba(16, 185, 129, 0.92); }
     .toast-error   { background: rgba(239, 68, 68, 0.92); }
     .toast-info    { background: rgba(59, 130, 246, 0.92); }
-
-    /* ===== واکنش‌گرا ===== */
     @media (max-width: 820px) {
       .container { padding: 16px; border-radius: 20px; }
       .logo { font-size: 22px; }
@@ -414,24 +348,21 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       .badge { font-size: 11px; padding: 4px 12px; }
       .token-bar { font-size: 13px; padding: 10px 14px; }
       .btn { font-size: 13px; padding: 8px 16px; }
-      .btn-sm { font-size: 11px; padding: 4px 10px; }
       table { font-size: 12px; min-width: 480px; }
       th, td { padding: 6px 4px; }
       .uuid-cell { font-size: 10px; max-width: 80px; }
+      .modal .config-box { font-size: 11px; padding: 8px 10px; }
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-
-  <!-- هدر -->
   <div class="header">
     <div class="logo">🦁 کیمارای <span>آهنین</span></div>
     <div><span class="badge">✅ پنل مدیریت</span></div>
   </div>
 
-  <!-- نوار توکن -->
   <div class="token-bar">
     <span>🔑 توکن فعال:</span>
     <span class="token-value" id="currentTokenDisplay">—</span>
@@ -442,14 +373,12 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     </div>
   </div>
 
-  <!-- نوار ابزار -->
   <div class="toolbar">
     <button class="btn" onclick="openAddModal()">➕ افزودن کاربر</button>
     <button class="btn btn-outline" onclick="loadUsers()">🔄 بارگذاری</button>
     <input type="text" class="search-box" id="searchInput" placeholder="🔍 جستجو در کاربران (نام، UUID، پروتکل...)" />
   </div>
 
-  <!-- جدول -->
   <div class="table-wrap">
     <table>
       <thead>
@@ -469,24 +398,19 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       </tbody>
     </table>
   </div>
-
 </div>
 
-<!-- ===== مودال ===== -->
+<!-- ===== مودال افزودن/ویرایش ===== -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h3 id="modalTitle">➕ افزودن کاربر جدید</h3>
     <input type="hidden" id="editUuid" />
-
     <label>نام کاربری <span style="color:#ff5555;">*</span></label>
     <input type="text" id="f_username" placeholder="نام کاربری" />
-
     <label>UUID (اختیاری)</label>
     <input type="text" id="f_uuid" placeholder="خالی = تولید خودکار" />
-
     <label>رمز عبور (اختیاری)</label>
     <input type="text" id="f_password" placeholder="خالی = تولید خودکار" />
-
     <label>پروتکل</label>
     <select id="f_protocol">
       <option value="vless">VLESS</option>
@@ -496,16 +420,26 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       <option value="hysteria2">Hysteria2</option>
       <option value="tuic">TUIC</option>
     </select>
-
     <label>سهمیه (GB)</label>
     <input type="number" id="f_quota" value="10" step="0.5" min="0" />
-
     <label>انقضا (روز از امروز)</label>
     <input type="number" id="f_expires" value="30" min="1" />
-
     <div class="modal-actions">
-      <button class="btn" id="modalSaveBtn" onclick="saveUser()">💾 ذخیره</button>
+      <button class="btn" onclick="saveUser()">💾 ذخیره</button>
       <button class="btn btn-outline" onclick="closeModal()">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== مودال کانفیگ ===== -->
+<div class="modal-overlay" id="configModal">
+  <div class="modal">
+    <h3>📋 کانفیگ کاربر</h3>
+    <div id="configContent">
+      <p style="color:#aaa;">در حال بارگذاری...</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeConfigModal()">بستن</button>
     </div>
   </div>
 </div>
@@ -527,10 +461,10 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       localStorage.setItem('admin_token', TOKEN);
     }
 
-    // نمایش توکن
     document.getElementById('currentTokenDisplay').textContent = TOKEN;
 
     const API_BASE = '/admin/api';
+    const WORKER_URL = window.location.origin;
 
     // ---- Toast ----
     function showToast(msg, type = 'success') {
@@ -540,19 +474,10 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       el.textContent = msg;
       container.appendChild(el);
       requestAnimationFrame(() => el.classList.add('show'));
-      const timer = setTimeout(() => {
+      setTimeout(() => {
         el.classList.remove('show');
         setTimeout(() => el.remove(), 400);
       }, 3200);
-      // ذخیره timer برای لغو احتمالی
-      el._timer = timer;
-      // لغو toast قبلی در صورت نیاز
-      const children = container.children;
-      for (let i = 0; i < children.length - 1; i++) {
-        clearTimeout(children[i]._timer);
-        children[i].classList.remove('show');
-        setTimeout(() => children[i].remove(), 400);
-      }
     }
 
     // ---- API helper ----
@@ -602,12 +527,12 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
                 <td>
                   <button class="btn btn-sm btn-outline" onclick="editUser('\${u.uuid}')" style="padding:4px 10px;font-size:11px;">✏️</button>
                   <button class="btn btn-sm btn-danger" onclick="deleteUser('\${u.uuid}')" style="padding:4px 10px;font-size:11px;">🗑️</button>
+                  <button class="btn btn-sm" onclick="showConfig('\${u.uuid}')" style="padding:4px 10px;font-size:11px;background:#3a6;color:#fff;">📋</button>
                 </td>
               </tr>
             \`;
           }).join('');
 
-          // اعمال جستجوی قبلی اگر وجود داشت
           const searchVal = document.getElementById('searchInput').value.trim();
           if (searchVal) applySearch(searchVal);
         })
@@ -631,7 +556,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
           row.style.display = 'none';
         }
       });
-      // اگر چیزی پیدا نشد، پیام نمایش بدیم
       const emptyRow = document.querySelector('#userTableBody tr.empty-search');
       if (found === 0 && q !== '') {
         if (!emptyRow) {
@@ -650,7 +574,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       applySearch(q);
     }
 
-    // ---- مودال ----
+    // ---- مودال افزودن/ویرایش ----
     function openModal(title, data = null) {
       document.getElementById('modalTitle').textContent = title;
       document.getElementById('editUuid').value = data?.uuid || '';
@@ -661,7 +585,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       document.getElementById('f_quota').value = data?.quota || 10;
       document.getElementById('f_expires').value = 30;
       document.getElementById('modalOverlay').classList.add('open');
-      // focus روی اولین input
       setTimeout(() => document.getElementById('f_username').focus(), 100);
     }
 
@@ -706,9 +629,8 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       const method = isEdit ? 'PUT' : 'POST';
       const path = isEdit ? '/users/' + uuid : '/users';
 
-      const btn = document.getElementById('modalSaveBtn');
-      btn.disabled = true;
-      btn.textContent = '⏳ در حال ذخیره...';
+      const btn = event?.target;
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ در حال ذخیره...'; }
 
       api(method, path, data)
         .then(() => {
@@ -720,8 +642,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
           showToast('❌ خطا در ذخیره: ' + err.message, 'error');
         })
         .finally(() => {
-          btn.disabled = false;
-          btn.textContent = '💾 ذخیره';
+          if (btn) { btn.disabled = false; btn.textContent = '💾 ذخیره'; }
         });
     }
 
@@ -736,6 +657,86 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
         .catch(err => {
           showToast('❌ خطا در حذف: ' + err.message, 'error');
         });
+    }
+
+    // ==================== نمایش کانفیگ ====================
+    function showConfig(uuid) {
+      const modal = document.getElementById('configModal');
+      const content = document.getElementById('configContent');
+      content.innerHTML = '<p style="color:#aaa;">⏳ در حال بارگذاری کانفیگ...</p>';
+      modal.classList.add('open');
+
+      // دریافت اطلاعات کاربر
+      api('GET', '/users')
+        .then(users => {
+          const user = users.find(u => u.uuid === uuid);
+          if (!user) {
+            content.innerHTML = '<p style="color:#ff5555;">❌ کاربر یافت نشد</p>';
+            return;
+          }
+
+          const host = WORKER_URL.replace('https://', '');
+          const vlessLink = \`vless://\${user.uuid}@\${host}:443?encryption=none&security=tls&sni=\${host}&fp=randomized&type=ws&host=\${host}&path=%2Fproxy%2Fvless%3Fuuid%3D\${user.uuid}%26ed%3D2048#Kimaaraye-\${user.username}\`;
+          const trojanLink = \`trojan://\${user.password}@\${host}:443?security=tls&sni=\${host}&fp=randomized&type=ws&host=\${host}&path=%2Fproxy%2Ftrojan%3Fuuid%3D\${user.uuid}%26ed%3D2048#Kimaaraye-\${user.username}\`;
+          const subLink = \`\${WORKER_URL}/sub?uuid=\${user.uuid}&format=singbox\`;
+
+          content.innerHTML = \`
+            <div style="margin-bottom:8px;color:#aaa;font-size:13px;">
+              <strong style="color:#ffcc00;">👤 کاربر:</strong> \${user.username}
+              <span style="margin-right:16px;"><strong style="color:#ffcc00;">پروتکل:</strong> \${user.protocol}</span>
+            </div>
+            
+            <span class="config-label">🔗 VLESS:</span>
+            <div class="config-box">
+              \${vlessLink}
+              <button class="copy-btn" onclick="copyText('\${vlessLink}')">📋 کپی</button>
+            </div>
+
+            <span class="config-label">🔗 Trojan:</span>
+            <div class="config-box">
+              \${trojanLink}
+              <button class="copy-btn" onclick="copyText('\${trojanLink}')">📋 کپی</button>
+            </div>
+
+            <span class="config-label">📥 ساب‌اسکریپشن (Sing-box):</span>
+            <div class="config-box">
+              \${subLink}
+              <button class="copy-btn" onclick="copyText('\${subLink}')">📋 کپی</button>
+            </div>
+          \`;
+        })
+        .catch(err => {
+          content.innerHTML = '<p style="color:#ff5555;">❌ خطا در دریافت کانفیگ: ' + err.message + '</p>';
+          showToast('خطا در دریافت کانفیگ', 'error');
+        });
+    }
+
+    function closeConfigModal() {
+      document.getElementById('configModal').classList.remove('open');
+    }
+
+    // ---- کپی متن ----
+    function copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+          .then(() => showToast('✅ کپی شد', 'success'))
+          .catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+    function fallbackCopy(text) {
+      const input = document.createElement('input');
+      input.value = text;
+      document.body.appendChild(input);
+      input.select();
+      try {
+        document.execCommand('copy');
+        showToast('✅ کپی شد', 'success');
+      } catch {
+        showToast('❌ کپی ناموفق', 'error');
+      }
+      input.remove();
     }
 
     // ---- تغییر توکن ----
@@ -760,29 +761,10 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     // ---- کپی توکن ----
     function copyToken() {
       const token = document.getElementById('currentTokenDisplay').textContent;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(token)
-          .then(() => showToast('✅ توکن کپی شد', 'success'))
-          .catch(() => fallbackCopy(token));
-      } else {
-        fallbackCopy(token);
-      }
-    }
-    function fallbackCopy(text) {
-      const input = document.createElement('input');
-      input.value = text;
-      document.body.appendChild(input);
-      input.select();
-      try {
-        document.execCommand('copy');
-        showToast('✅ توکن کپی شد', 'success');
-      } catch {
-        showToast('❌ کپی ناموفق', 'error');
-      }
-      input.remove();
+      copyText(token);
     }
 
-    // ---- تغییر ۲: expose functions به صورت global ----
+    // ---- expose functions ----
     window.loadUsers = loadUsers;
     window.searchUsers = searchUsers;
     window.openAddModal = openAddModal;
@@ -792,16 +774,23 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     window.deleteUser = deleteUser;
     window.changeToken = changeToken;
     window.copyToken = copyToken;
+    window.showConfig = showConfig;
+    window.closeConfigModal = closeConfigModal;
+    window.copyText = copyText;
 
     // ---- رویدادها ----
     document.getElementById('searchInput').addEventListener('input', searchUsers);
-
     document.getElementById('modalOverlay').addEventListener('click', function(e) {
       if (e.target === this) closeModal();
     });
-
+    document.getElementById('configModal').addEventListener('click', function(e) {
+      if (e.target === this) closeConfigModal();
+    });
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeModal();
+      if (e.key === 'Escape') {
+        closeModal();
+        closeConfigModal();
+      }
     });
 
     // ---- بارگذاری اولیه ----
