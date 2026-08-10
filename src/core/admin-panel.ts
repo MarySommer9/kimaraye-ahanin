@@ -5,11 +5,10 @@
 import { Env, User } from '../types';
 import { listUsers, createUser, updateUser, deleteUser } from './auth';
 
-// ==================== API پنل مدیریت ====================
 export async function adminAPI(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
 
-  // ===== احراز هویت ادمین (فقط از KV) =====
+  // فقط از KV بخون
   const adminToken = await env.KV.get('admin_token') || 'admin123';
   const authHeader = request.headers.get('Authorization');
   const token = authHeader?.replace('Bearer ', '') || '';
@@ -23,71 +22,45 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
 
   // ===== مسیرها =====
 
-  // ---------- GET /admin/api/users ----------
   if (url.pathname === '/admin/api/users' && request.method === 'GET') {
     const users = await listUsers(env);
-    return new Response(JSON.stringify(users), {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json(users);
   }
 
-  // ---------- POST /admin/api/users ----------
   if (url.pathname === '/admin/api/users' && request.method === 'POST') {
     try {
       const data = await request.json() as Partial<User>;
       const newUser = await createUser(env, data);
-      return new Response(JSON.stringify(newUser), {
-        status: 201,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    } catch (error) {
-      return new Response(JSON.stringify({ error: 'Failed to create user' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json(newUser, { status: 201 });
+    } catch {
+      return Response.json({ error: 'Failed to create user' }, { status: 400 });
     }
   }
 
-  // ---------- PUT /admin/api/users/:uuid ----------
   if (url.pathname.startsWith('/admin/api/users/') && request.method === 'PUT') {
     const uuid = url.pathname.split('/').pop();
-    if (!uuid) {
-      return new Response(JSON.stringify({ error: 'Missing UUID' }), { status: 400 });
-    }
+    if (!uuid) return Response.json({ error: 'Missing UUID' }, { status: 400 });
     try {
       const updates = await request.json() as Partial<User>;
       await updateUser(env, uuid, updates);
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { 'Content-Type': 'application/json' }
-      });
-    } catch (error) {
-      return new Response(JSON.stringify({ error: 'Failed to update user' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ success: true });
+    } catch {
+      return Response.json({ error: 'Failed to update user' }, { status: 400 });
     }
   }
 
-  // ---------- DELETE /admin/api/users/:uuid ----------
   if (url.pathname.startsWith('/admin/api/users/') && request.method === 'DELETE') {
     const uuid = url.pathname.split('/').pop();
-    if (!uuid) {
-      return new Response(JSON.stringify({ error: 'Missing UUID' }), { status: 400 });
-    }
+    if (!uuid) return Response.json({ error: 'Missing UUID' }, { status: 400 });
     try {
       await deleteUser(env, uuid);
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { 'Content-Type': 'application/json' }
-      });
-    } catch (error) {
-      return new Response(JSON.stringify({ error: 'Failed to delete user' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ success: true });
+    } catch {
+      return Response.json({ error: 'Failed to delete user' }, { status: 400 });
     }
   }
 
-  // ---------- صفحه‌ی HTML پنل مدیریت ----------
+  // صفحه مدیریت
   return new Response(`
     <!DOCTYPE html>
     <html lang="fa" dir="rtl">
@@ -110,11 +83,10 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
         .container {
           max-width: 1200px;
           width: 100%;
-          background: rgba(20, 20, 35, 0.8);
+          background: rgba(20,20,35,0.85);
           border-radius: 16px;
           padding: 24px;
-          box-shadow: 0 0 40px rgba(255, 204, 0, 0.05);
-          border: 1px solid rgba(255, 204, 0, 0.1);
+          border: 1px solid rgba(255,204,0,0.1);
         }
         .header {
           display: flex;
@@ -132,14 +104,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
           color: #ffcc00;
         }
         .logo span { color: #ffaa00; }
-        .token-status {
-          background: rgba(0, 255, 100, 0.1);
-          color: #0f0;
-          padding: 6px 14px;
-          border-radius: 20px;
-          font-size: 14px;
-          border: 1px solid rgba(0, 255, 100, 0.2);
-        }
         .toolbar {
           display: flex;
           gap: 12px;
@@ -154,48 +118,35 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
           border-radius: 8px;
           cursor: pointer;
           font-weight: bold;
-          transition: all 0.2s;
-          font-size: 14px;
+          transition: 0.2s;
         }
         .btn:hover { background: #ffaa00; transform: scale(1.02); }
         .btn-danger { background: #ff4444; color: #fff; }
         .btn-danger:hover { background: #cc0000; }
         .btn-secondary { background: #333; color: #eee; }
         .btn-secondary:hover { background: #444; }
-        .table-wrapper { overflow-x: auto; }
-        .table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 8px;
-          font-size: 14px;
-        }
+        .table { width: 100%; border-collapse: collapse; margin-top: 8px; }
         .table th {
           background: #1a1a2e;
-          padding: 12px 10px;
+          padding: 10px;
           border: 1px solid #2a2a3e;
-          text-align: center;
           color: #ffcc00;
-          font-weight: bold;
         }
         .table td {
           padding: 10px;
           border: 1px solid #2a2a3e;
-          text-align: center;
           color: #ccc;
         }
         .table tr:hover { background: #1a1a2e; }
         .modal {
           display: none;
           position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
+          top: 0; left: 0;
+          width: 100%; height: 100%;
           background: rgba(0,0,0,0.8);
           justify-content: center;
           align-items: center;
           z-index: 1000;
-          backdrop-filter: blur(4px);
         }
         .modal-content {
           background: #1a1a2e;
@@ -203,14 +154,9 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
           border-radius: 12px;
           width: 90%;
           max-width: 480px;
-          border: 1px solid rgba(255, 204, 0, 0.2);
-          box-shadow: 0 0 60px rgba(0,0,0,0.5);
+          border: 1px solid rgba(255,204,0,0.2);
         }
-        .modal-content h3 {
-          color: #ffcc00;
-          margin-bottom: 16px;
-          text-align: center;
-        }
+        .modal-content h3 { color: #ffcc00; margin-bottom: 16px; text-align: center; }
         .modal-content input, .modal-content select {
           width: 100%;
           padding: 10px 12px;
@@ -220,14 +166,9 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
           border-radius: 6px;
           color: #fff;
           font-size: 14px;
-          outline: none;
         }
         .modal-content input:focus, .modal-content select:focus {
           border-color: #ffcc00;
-        }
-        .modal-content label {
-          color: #aaa;
-          font-size: 13px;
         }
         .modal-actions {
           display: flex;
@@ -247,21 +188,13 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
           z-index: 2000;
           opacity: 0;
           transform: translateY(20px);
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+          transition: all 0.3s;
         }
-        .toast.show {
-          opacity: 1;
-          transform: translateY(0);
-        }
+        .toast.show { opacity: 1; transform: translateY(0); }
         .toast.success { background: #00aa44; }
         .toast.error { background: #cc2233; }
         .toast.info { background: #2266cc; }
-        .empty-state {
-          text-align: center;
-          padding: 40px 20px;
-          color: #666;
-        }
+        .empty-state { text-align: center; padding: 40px 20px; color: #666; }
         @media (max-width: 768px) {
           .container { padding: 16px; }
           .header { flex-direction: column; align-items: flex-start; }
@@ -276,37 +209,28 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       <div class="container">
         <div class="header">
           <div class="logo">🦁 کیمارای آهنین <span>| مدیریت</span></div>
-          <div>
-            <span class="token-status" id="tokenStatus">✅ متصل</span>
-          </div>
+          <div><span style="color:#0f0;">✅ متصل</span></div>
         </div>
-
         <div class="toolbar">
           <button class="btn" onclick="showAddUser()">➕ افزودن کاربر</button>
           <button class="btn btn-secondary" onclick="loadUsers()">🔄 بارگذاری مجدد</button>
         </div>
-
-        <div class="table-wrapper">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>نام کاربری</th>
-                <th>UUID</th>
-                <th>پروتکل</th>
-                <th>سهمیه (GB)</th>
-                <th>مصرف</th>
-                <th>انقضا</th>
-                <th>عملیات</th>
-              </tr>
-            </thead>
-            <tbody id="userList">
-              <tr><td colspan="7" class="empty-state">⏳ در حال بارگذاری...</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>نام کاربری</th>
+              <th>UUID</th>
+              <th>پروتکل</th>
+              <th>سهمیه (GB)</th>
+              <th>مصرف</th>
+              <th>انقضا</th>
+              <th>عملیات</th>
+            </tr>
+          </thead>
+          <tbody id="userList"><tr><td colspan="7" class="empty-state">⏳ در حال بارگذاری...</td></tr></tbody>
+        </table>
       </div>
 
-      <!-- Modal افزودن کاربر -->
       <div id="addUserModal" class="modal">
         <div class="modal-content">
           <h3>➕ افزودن کاربر جدید</h3>
@@ -326,9 +250,9 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
             <option value="tuic">TUIC</option>
           </select>
           <label>سهمیه (GB)</label>
-          <input type="number" id="quota" placeholder="سهمیه (GB)" value="10">
-          <label>انقضا (روز از امروز)</label>
-          <input type="number" id="expires" placeholder="انقضا (روز)" value="30">
+          <input type="number" id="quota" value="10">
+          <label>انقضا (روز)</label>
+          <input type="number" id="expires" value="30">
           <div class="modal-actions">
             <button class="btn" onclick="addUser()">✅ ثبت</button>
             <button class="btn btn-secondary" onclick="closeModal()">❌ انصراف</button>
@@ -336,60 +260,48 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
         </div>
       </div>
 
-      <!-- Toast -->
       <div id="toast" class="toast"></div>
 
       <script>
-        const API_BASE = '/admin/api';
-        const TOKEN = localStorage.getItem('admin_token') || 'admin123';
+        const TOKEN = 'admin123';
 
-        function showToast(message, type = 'success') {
-          const toast = document.getElementById('toast');
-          toast.textContent = message;
-          toast.className = 'toast ' + type + ' show';
-          clearTimeout(toast._timer);
-          toast._timer = setTimeout(() => {
-            toast.classList.remove('show');
-          }, 3000);
+        function showToast(msg, type = 'success') {
+          const t = document.getElementById('toast');
+          t.textContent = msg;
+          t.className = 'toast ' + type + ' show';
+          clearTimeout(t._timer);
+          t._timer = setTimeout(() => t.classList.remove('show'), 3000);
         }
 
         function loadUsers() {
           const tbody = document.getElementById('userList');
           tbody.innerHTML = '<tr><td colspan="7" class="empty-state">⏳ در حال بارگذاری...</td></tr>';
-
-          fetch(API_BASE + '/users', {
+          fetch('/admin/api/users', {
             headers: { 'Authorization': 'Bearer ' + TOKEN }
           })
-          .then(res => {
-            if (!res.ok) throw new Error('Unauthorized or server error');
-            return res.json();
-          })
+          .then(res => res.ok ? res.json() : Promise.reject('Unauthorized'))
           .then(data => {
             if (!data || data.length === 0) {
               tbody.innerHTML = '<tr><td colspan="7" class="empty-state">📭 هیچ کاربری یافت نشد</td></tr>';
               return;
             }
-            tbody.innerHTML = data.map(user => {
-              const expires = user.expires_at ? new Date(user.expires_at).toLocaleDateString('fa-IR') : 'نامحدود';
-              const used = user.used ? user.used.toFixed(2) : '0';
-              return \`
-                <tr>
-                  <td>\${user.username}</td>
-                  <td style="font-family:monospace;font-size:12px;">\${user.uuid}</td>
-                  <td>\${user.protocol}</td>
-                  <td>\${user.quota}</td>
-                  <td>\${used}</td>
-                  <td>\${expires}</td>
-                  <td>
-                    <button class="btn" onclick="editUser('\${user.uuid}')" style="padding:4px 12px;font-size:12px;">✏️</button>
-                    <button class="btn btn-danger" onclick="removeUser('\${user.uuid}')" style="padding:4px 12px;font-size:12px;">🗑️</button>
-                  </td>
-                </tr>
-              \`;
-            }).join('');
+            tbody.innerHTML = data.map(u => \`
+              <tr>
+                <td>\${u.username}</td>
+                <td style="font-size:12px;font-family:monospace;">\${u.uuid}</td>
+                <td>\${u.protocol}</td>
+                <td>\${u.quota}</td>
+                <td>\${u.used?.toFixed(2) || 0}</td>
+                <td>\${u.expires_at ? new Date(u.expires_at).toLocaleDateString('fa-IR') : 'نامحدود'}</td>
+                <td>
+                  <button class="btn" onclick="editUser('\${u.uuid}')" style="padding:4px 12px;font-size:12px;">✏️</button>
+                  <button class="btn btn-danger" onclick="removeUser('\${u.uuid}')" style="padding:4px 12px;font-size:12px;">🗑️</button>
+                </td>
+              </tr>
+            \`).join('');
           })
-          .catch(err => {
-            tbody.innerHTML = \`<tr><td colspan="7" class="empty-state" style="color:#ff4444;">❌ خطا: \${err.message}</td></tr>\`;
+          .catch(() => {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state" style="color:#ff4444;">❌ خطا در بارگذاری</td></tr>';
             showToast('خطا در بارگذاری کاربران', 'error');
           });
         }
@@ -397,7 +309,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
         function showAddUser() {
           document.getElementById('addUserModal').style.display = 'flex';
         }
-
         function closeModal() {
           document.getElementById('addUserModal').style.display = 'none';
         }
@@ -411,58 +322,46 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
             quota: parseFloat(document.getElementById('quota').value) || 10,
             expires_at: Date.now() + (parseInt(document.getElementById('expires').value) || 30) * 86400000
           };
-
           if (!data.username) {
             showToast('❌ نام کاربری الزامی است', 'error');
             return;
           }
-
-          fetch(API_BASE + '/users', {
+          fetch('/admin/api/users', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + TOKEN
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
             body: JSON.stringify(data)
           })
           .then(res => res.json())
           .then(() => {
             closeModal();
             loadUsers();
-            showToast('✅ کاربر با موفقیت افزوده شد', 'success');
+            showToast('✅ کاربر افزوده شد', 'success');
             document.getElementById('username').value = '';
             document.getElementById('uuid').value = '';
             document.getElementById('password').value = '';
           })
-          .catch(() => {
-            showToast('❌ خطا در افزودن کاربر', 'error');
-          });
+          .catch(() => showToast('❌ خطا در افزودن کاربر', 'error'));
         }
 
         function removeUser(uuid) {
-          if (!confirm('آیا از حذف این کاربر مطمئن هستید؟')) return;
-          fetch(API_BASE + '/users/' + uuid, {
+          if (!confirm('حذف کاربر؟')) return;
+          fetch('/admin/api/users/' + uuid, {
             method: 'DELETE',
             headers: { 'Authorization': 'Bearer ' + TOKEN }
           })
-          .then(() => {
-            loadUsers();
-            showToast('✅ کاربر حذف شد', 'success');
-          })
-          .catch(() => {
-            showToast('❌ خطا در حذف کاربر', 'error');
-          });
+          .then(() => { loadUsers(); showToast('✅ کاربر حذف شد', 'success'); })
+          .catch(() => showToast('❌ خطا در حذف', 'error'));
         }
 
         function editUser(uuid) {
-          showToast('✏️ ویرایش کاربر: ' + uuid + ' (به‌زودی اضافه می‌شود)', 'info');
+          showToast('✏️ ویرایش کاربر: ' + uuid + ' (به‌زودی)', 'info');
         }
-
-        loadUsers();
 
         document.getElementById('addUserModal').addEventListener('click', function(e) {
           if (e.target === this) closeModal();
         });
+
+        loadUsers();
       </script>
     </body>
     </html>
