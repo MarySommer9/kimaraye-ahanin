@@ -8,18 +8,16 @@ import { listUsers, createUser, updateUser, deleteUser } from './auth';
 export async function adminAPI(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
 
-  // ===== احراز هویت با اولویت URL =====
-  const urlToken = url.searchParams.get('token');
+  // ===== تغییر ۱: احراز هویت اصلاح‌شده =====
   const envToken = env.ADMIN_TOKEN;
   const kvToken = await env.KV?.get('admin_token');
-  const adminToken = urlToken || envToken || kvToken || 'admin123';
+  const expectedToken = envToken || kvToken || 'admin123';
 
-const authHeader = request.headers.get('Authorization');
-const queryToken = url.searchParams.get('token') || '';
-const token = authHeader?.replace('Bearer ', '') || queryToken || '';
+  const authHeader = request.headers.get('Authorization');
+  const queryToken = url.searchParams.get('token') || '';
+  const token = authHeader?.replace('Bearer ', '') || queryToken || '';
 
-
-  if (!token || token !== adminToken) {
+  if (!token || token !== expectedToken) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -784,22 +782,7 @@ const token = authHeader?.replace('Bearer ', '') || queryToken || '';
       input.remove();
     }
 
-    // ---- رویدادها ----
-    document.getElementById('searchInput').addEventListener('input', searchUsers);
-
-    document.getElementById('modalOverlay').addEventListener('click', function(e) {
-      if (e.target === this) closeModal();
-    });
-
-    // بستن مودال با کلید ESC
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeModal();
-    });
-
-    // ---- بارگذاری اولیه ----
-    loadUsers();
-
-    // expose functions to global scope
+    // ---- تغییر ۲: expose functions به صورت global ----
     window.loadUsers = loadUsers;
     window.searchUsers = searchUsers;
     window.openAddModal = openAddModal;
@@ -809,6 +792,20 @@ const token = authHeader?.replace('Bearer ', '') || queryToken || '';
     window.deleteUser = deleteUser;
     window.changeToken = changeToken;
     window.copyToken = copyToken;
+
+    // ---- رویدادها ----
+    document.getElementById('searchInput').addEventListener('input', searchUsers);
+
+    document.getElementById('modalOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // ---- بارگذاری اولیه ----
+    loadUsers();
 
   })();
 </script>
