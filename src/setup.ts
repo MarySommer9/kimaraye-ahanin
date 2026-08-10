@@ -8,22 +8,27 @@ console.log('🛠️  Running setup script...');
 // ===== 1. D1 Database =====
 let dbId: string | null = null;
 try {
-  const output = execSync('npx wrangler d1 list', { encoding: 'utf8' });
-  // regex درست: اول uuid بعد اسم
-  const match = output.match(/([a-f0-9-]+)\s+kimaraye-ahanin-db/);
+  // استفاده از 'd1 get' برای دریافت مستقیم اطلاعات دیتابیس
+  const output = execSync('npx wrangler d1 get kimaraye-ahanin-db', { encoding: 'utf8' });
+  const match = output.match(/"uuid"\s*:\s*"([a-f0-9-]+)"/);
   if (match) {
     dbId = match[1];
     console.log(`✅ D1 database already exists: ${dbId}`);
   } else {
-    console.log('📦 Creating D1 database...');
+    throw new Error('Could not parse D1 info');
+  }
+} catch (err) {
+  // اگر دیتابیس وجود نداشت، بسازش
+  console.log('📦 Creating D1 database...');
+  try {
     const createOutput = execSync('npx wrangler d1 create kimaraye-ahanin-db', { encoding: 'utf8' });
     const idMatch = createOutput.match(/database_id\s*=\s*"([a-f0-9-]+)"/);
     dbId = idMatch?.[1] || null;
     console.log(`✅ D1 database created: ${dbId}`);
+  } catch (createErr) {
+    console.error('❌ Failed to create D1 database:', createErr);
+    process.exit(1);
   }
-} catch (err) {
-  console.error('❌ Failed to handle D1 database:', err);
-  process.exit(1);
 }
 
 if (!dbId) {
@@ -35,7 +40,7 @@ if (!dbId) {
 let kvId: string | null = null;
 try {
   const output = execSync('npx wrangler kv namespace list', { encoding: 'utf8' });
-  // regex درست: اول id بعد title
+  // regex برای پیدا کردن ID از جدول خروجی
   const match = output.match(/([a-f0-9-]+)\s+KV/);
   if (match) {
     kvId = match[1];
