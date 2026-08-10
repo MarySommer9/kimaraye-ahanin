@@ -2,8 +2,14 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 console.log('🛠️  Running setup script...');
+
+// ===== تولید توکن تصادفی =====
+function generateToken(length = 32): string {
+  return crypto.randomBytes(length).toString('hex');
+}
 
 // ===== تابع: گرفتن ID دیتابیس D1 =====
 function getD1DatabaseId(name: string): string | null {
@@ -127,4 +133,30 @@ try {
   process.exit(1);
 }
 
-console.log('🎉 Setup completed successfully!');
+// ===== 5. تنظیم توکن ادمین در KV و Environment =====
+try {
+  const adminToken = generateToken(32);
+  console.log('🔑 Generating admin token...');
+  
+  // ذخیره در KV
+  execSync(`npx wrangler kv:key put --binding=KV "admin_token" "${adminToken}"`, { stdio: 'inherit' });
+  console.log(`✅ admin_token saved in KV: ${adminToken}`);
+  
+  // ذخیره در Environment Variable (از طریق Wrangler secret)
+  try {
+    execSync(`echo "${adminToken}" | npx wrangler secret put ADMIN_TOKEN`, { stdio: 'inherit' });
+    console.log('✅ ADMIN_TOKEN saved as secret');
+  } catch (secretErr) {
+    console.warn('⚠️ Could not save ADMIN_TOKEN as secret. Please set it manually in Cloudflare dashboard.');
+  }
+  
+  console.log('\n🎉 Setup completed successfully!');
+  console.log(`\n🔑 ADMIN_TOKEN: ${adminToken}`);
+  console.log('📌 Copy this token. You will need it to log into the admin panel.');
+  console.log(`👉 https://kimaraye-ahanin.workers.dev/admin?token=${adminToken}\n`);
+} catch (err) {
+  console.error('❌ Failed to set admin token:', err);
+  console.log('⚠️ Please set admin_token in KV manually:');
+  console.log(`   npx wrangler kv:key put --binding=KV "admin_token" "YOUR_SECURE_TOKEN"`);
+  process.exit(1);
+}
