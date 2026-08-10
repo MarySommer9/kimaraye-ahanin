@@ -9,17 +9,13 @@ import { listUsers, createUser, updateUser, deleteUser } from './auth';
 export async function adminAPI(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
 
-  // ===== احراز هویت ادمین (با اولویت Environment Variable) =====
-  // ۱. اول از Environment Variable (ADMIN_TOKEN) بخون
-  // ۲. اگه نبود، از KV بخون
-  // ۳. در نهایت مقدار پیش‌فرض 'admin123'
-  const adminToken = env.ADMIN_TOKEN || (await env.KV?.get('admin_token')) || 'admin123';
-  
+  // ===== احراز هویت ادمین (فقط از KV) =====
+  const adminToken = await env.KV.get('admin_token') || 'admin123';
   const authHeader = request.headers.get('Authorization');
   const token = authHeader?.replace('Bearer ', '') || '';
-  
+
   if (!token || token !== adminToken) {
-    return new Response('Unauthorized', { 
+    return new Response('Unauthorized', {
       status: 401,
       headers: { 'WWW-Authenticate': 'Bearer' }
     });
@@ -347,7 +343,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
         const API_BASE = '/admin/api';
         const TOKEN = localStorage.getItem('admin_token') || 'admin123';
 
-        // نمایش پیام Toast
         function showToast(message, type = 'success') {
           const toast = document.getElementById('toast');
           toast.textContent = message;
@@ -358,7 +353,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
           }, 3000);
         }
 
-        // بارگذاری لیست کاربران
         function loadUsers() {
           const tbody = document.getElementById('userList');
           tbody.innerHTML = '<tr><td colspan="7" class="empty-state">⏳ در حال بارگذاری...</td></tr>';
@@ -400,7 +394,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
           });
         }
 
-        // نمایش مودال افزودن کاربر
         function showAddUser() {
           document.getElementById('addUserModal').style.display = 'flex';
         }
@@ -409,7 +402,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
           document.getElementById('addUserModal').style.display = 'none';
         }
 
-        // افزودن کاربر جدید
         function addUser() {
           const data = {
             username: document.getElementById('username').value.trim(),
@@ -438,7 +430,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
             closeModal();
             loadUsers();
             showToast('✅ کاربر با موفقیت افزوده شد', 'success');
-            // پاک کردن فرم
             document.getElementById('username').value = '';
             document.getElementById('uuid').value = '';
             document.getElementById('password').value = '';
@@ -448,7 +439,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
           });
         }
 
-        // حذف کاربر
         function removeUser(uuid) {
           if (!confirm('آیا از حذف این کاربر مطمئن هستید؟')) return;
           fetch(API_BASE + '/users/' + uuid, {
@@ -464,15 +454,12 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
           });
         }
 
-        // ویرایش کاربر (فعلاً placeholder)
         function editUser(uuid) {
           showToast('✏️ ویرایش کاربر: ' + uuid + ' (به‌زودی اضافه می‌شود)', 'info');
         }
 
-        // بارگذاری اولیه
         loadUsers();
 
-        // بستن مودال با کلیک خارج
         document.getElementById('addUserModal').addEventListener('click', function(e) {
           if (e.target === this) closeModal();
         });
