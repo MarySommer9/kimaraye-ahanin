@@ -15,7 +15,7 @@ try {
     console.log(`✅ D1 database already exists: ${dbId}`);
   } else {
     console.log('📦 Creating D1 database...');
-    const createOutput = execSync('npx wrangler d1 create kimaraye-ahanin-db --json', { encoding: 'utf8' });
+    const result = execSync('npx wrangler d1 create kimaraye-ahanin-db').toString();
     const result = JSON.parse(createOutput);
     dbId = result.uuid;
     console.log(`✅ D1 database created: ${dbId}`);
