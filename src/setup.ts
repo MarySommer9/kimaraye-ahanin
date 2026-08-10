@@ -15,9 +15,9 @@ try {
     console.log(`✅ D1 database already exists: ${dbId}`);
   } else {
     console.log('📦 Creating D1 database...');
-    const result = execSync('npx wrangler d1 create kimaraye-ahanin-db').toString();
-    const result = JSON.parse(createOutput);
-    dbId = result.uuid;
+    const createOutput = execSync('npx wrangler d1 create kimaraye-ahanin-db', { encoding: 'utf8' });
+    const match = createOutput.match(/database_id\s*=\s*"([a-f0-9-]+)"/);
+    dbId = match?.[1] || null;
     console.log(`✅ D1 database created: ${dbId}`);
   }
 } catch (err) {
