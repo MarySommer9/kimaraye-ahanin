@@ -1,5 +1,5 @@
 // ============================================
-// 🦁 کیمارای آهنین - پنل مدیریت حرفه‌ای
+// 🦁 کیمارای آهنین - پنل مدیریت (نسخه نهایی)
 // ============================================
 
 import { Env, User } from '../types';
@@ -11,23 +11,18 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
   // === احراز هویت ===
   const adminToken = env.ADMIN_TOKEN || (await env.KV.get('admin_token')) || 'admin123';
   const authHeader = request.headers.get('Authorization');
-  const queryToken = url.searchParams.get('token') || '';
-  const token = authHeader?.replace('Bearer ', '') || queryToken || '';
-
+  const token = authHeader?.replace('Bearer ', '') || '';
 
   if (!token || token !== adminToken) {
     return new Response('Unauthorized', { status: 401 });
   }
 
   // === API ها ===
-
-  // GET /admin/api/users
   if (url.pathname === '/admin/api/users' && request.method === 'GET') {
     const users = await listUsers(env);
     return Response.json(users);
   }
 
-  // POST /admin/api/users
   if (url.pathname === '/admin/api/users' && request.method === 'POST') {
     try {
       const data = await request.json() as Partial<User>;
@@ -38,7 +33,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     }
   }
 
-  // PUT /admin/api/users/:uuid
   if (url.pathname.startsWith('/admin/api/users/') && request.method === 'PUT') {
     const uuid = url.pathname.split('/').pop();
     if (!uuid) return Response.json({ error: 'Missing UUID' }, { status: 400 });
@@ -51,7 +45,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     }
   }
 
-  // DELETE /admin/api/users/:uuid
   if (url.pathname.startsWith('/admin/api/users/') && request.method === 'DELETE') {
     const uuid = url.pathname.split('/').pop();
     if (!uuid) return Response.json({ error: 'Missing UUID' }, { status: 400 });
@@ -63,9 +56,8 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     }
   }
 
-  // === صفحه HTML پنل مدیریت ===
-  return new Response(
-    `<!DOCTYPE html>
+  // === صفحه HTML ===
+  return new Response(`<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -93,7 +85,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       border: 1px solid rgba(255, 204, 0, 0.08);
       box-shadow: 0 30px 60px rgba(0,0,0,0.6);
     }
-    /* هدر */
     .header {
       display: flex;
       justify-content: space-between;
@@ -108,7 +99,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       font-size: 28px;
       font-weight: 700;
       color: #ffcc00;
-      letter-spacing: -0.5px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -122,7 +112,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       font-size: 13px;
       border: 1px solid rgba(0, 255, 100, 0.15);
     }
-    /* نوار ابزار */
     .toolbar {
       display: flex;
       gap: 12px;
@@ -157,9 +146,8 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       color: #fff;
       box-shadow: 0 4px 14px rgba(220, 53, 69, 0.2);
     }
-    .btn-danger:hover { background: #c82333; box-shadow: 0 8px 24px rgba(220, 53, 69, 0.3); }
+    .btn-danger:hover { background: #c82333; }
     .btn-sm { padding: 6px 14px; font-size: 12px; }
-    /* جدول */
     .table-wrap { overflow-x: auto; border-radius: 16px; border: 1px solid #1e1e30; }
     table {
       width: 100%;
@@ -174,17 +162,15 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       padding: 14px 12px;
       text-align: center;
       border-bottom: 2px solid #2a2a40;
-      white-space: nowrap;
     }
     td {
       padding: 12px;
       text-align: center;
       border-bottom: 1px solid #1a1a2a;
       color: #d0d0e0;
-      vertical-align: middle;
     }
     tr:hover td { background: #161625; }
-    .uuid-cell { font-family: monospace; font-size: 12px; color: #8a8aaa; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+    .uuid-cell { font-family: monospace; font-size: 12px; color: #8a8aaa; }
     .status-badge {
       display: inline-block;
       padding: 2px 12px;
@@ -194,7 +180,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     }
     .status-active { background: rgba(0, 255, 100, 0.12); color: #0f0; }
     .status-expired { background: rgba(255, 70, 70, 0.12); color: #ff5555; }
-    /* مودال */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -214,26 +199,14 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       max-width: 520px;
       width: 100%;
       border: 1px solid rgba(255, 204, 0, 0.08);
-      box-shadow: 0 40px 80px rgba(0,0,0,0.7);
       animation: modalFade 0.25s ease;
     }
     @keyframes modalFade {
       from { opacity:0; transform:scale(0.95) translateY(20px); }
       to   { opacity:1; transform:scale(1) translateY(0); }
     }
-    .modal h3 {
-      color: #ffcc00;
-      font-size: 22px;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-    .modal label {
-      display: block;
-      color: #a0a0b8;
-      font-size: 13px;
-      margin-bottom: 4px;
-      margin-top: 12px;
-    }
+    .modal h3 { color: #ffcc00; font-size: 22px; margin-bottom: 24px; text-align: center; }
+    .modal label { display: block; color: #a0a0b8; font-size: 13px; margin-bottom: 4px; margin-top: 12px; }
     .modal input, .modal select {
       width: 100%;
       padding: 10px 14px;
@@ -243,16 +216,10 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       color: #fff;
       font-size: 14px;
       outline: none;
-      transition: 0.2s;
     }
-    .modal input:focus, .modal select:focus { border-color: #ffcc00; box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.1); }
-    .modal-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
-    }
+    .modal input:focus, .modal select:focus { border-color: #ffcc00; }
+    .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
     .modal-actions .btn { flex: 1; justify-content: center; }
-    /* Toast */
     .toast-container {
       position: fixed;
       bottom: 30px;
@@ -272,20 +239,23 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       transform: translateX(40px);
       transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       box-shadow: 0 12px 32px rgba(0,0,0,0.4);
-      max-width: 400px;
     }
     .toast.show { opacity: 1; transform: translateX(0); }
     .toast-success { background: #10b981; }
     .toast-error { background: #ef4444; }
     .toast-info { background: #3b82f6; }
-    /* خالی */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #5a5a72;
-    }
+    .empty-state { text-align: center; padding: 60px 20px; color: #5a5a72; }
     .empty-state span { font-size: 48px; display: block; margin-bottom: 12px; }
-    /* واکنش‌گرا */
+    .token-notice {
+      background: rgba(255, 204, 0, 0.08);
+      border: 1px solid rgba(255, 204, 0, 0.15);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      color: #ccc;
+      font-size: 14px;
+    }
+    .token-notice strong { color: #ffcc00; }
     @media (max-width: 768px) {
       .container { padding: 16px; }
       .logo { font-size: 20px; }
@@ -299,15 +269,16 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
 <body>
 
 <div class="container">
-  <!-- هدر -->
   <div class="header">
     <div class="logo">🦁 کیمارای <span>آهنین</span></div>
-    <div>
-      <span class="badge">✅ پنل مدیریت</span>
-    </div>
+    <div><span class="badge">✅ پنل مدیریت</span></div>
   </div>
 
-  <!-- نوار ابزار -->
+  <div class="token-notice">
+    🔑 توکن فعلی: <strong id="currentTokenDisplay">—</strong>
+    <button class="btn btn-sm btn-outline" onclick="changeToken()" style="margin-right:12px;">تغییر توکن</button>
+  </div>
+
   <div class="toolbar">
     <button class="btn" onclick="openAddModal()">➕ افزودن کاربر</button>
     <button class="btn btn-outline" onclick="loadUsers()">🔄 بارگذاری مجدد</button>
@@ -315,7 +286,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     <input type="text" id="searchInput" placeholder="جستجو در کاربران..." style="flex:1;min-width:160px;padding:10px 16px;border-radius:40px;border:1px solid #2a2a40;background:#0e0e1a;color:#fff;outline:none;">
   </div>
 
-  <!-- جدول -->
   <div class="table-wrap">
     <table>
       <thead>
@@ -337,7 +307,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
   </div>
 </div>
 
-<!-- مودال افزودن/ویرایش -->
+<!-- مودال -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h3 id="modalTitle">➕ افزودن کاربر جدید</h3>
@@ -362,7 +332,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     <label>انقضا (روز از امروز)</label>
     <input type="number" id="f_expires" value="30" />
     <div class="modal-actions">
-      <button class="btn" id="modalSaveBtn" onclick="saveUser()">💾 ذخیره</button>
+      <button class="btn" onclick="saveUser()">💾 ذخیره</button>
       <button class="btn btn-outline" onclick="closeModal()">انصراف</button>
     </div>
   </div>
@@ -372,11 +342,22 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-  // ===== تنظیمات =====
-  const TOKEN = 'admin123'; // یا از env بگیرید
+  // ===== دریافت توکن از URL یا localStorage =====
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenFromUrl = urlParams.get('token');
+  const tokenFromStorage = localStorage.getItem('admin_token');
+  const TOKEN = tokenFromUrl || tokenFromStorage || 'admin123';
+
+  // ذخیره توکن در localStorage
+  if (tokenFromUrl) {
+    localStorage.setItem('admin_token', TOKEN);
+  }
+
+  // نمایش توکن در صفحه
+  document.getElementById('currentTokenDisplay').textContent = TOKEN;
+
   const API_BASE = '/admin/api';
 
-  // ===== توابع کمکی =====
   function showToast(msg, type = 'success') {
     const container = document.getElementById('toastContainer');
     const el = document.createElement('div');
@@ -400,12 +381,11 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       opts.body = JSON.stringify(body);
     }
     return fetch(API_BASE + path, opts).then(r => {
-      if (!r.ok) throw new Error('خطا در درخواست');
+      if (!r.ok) throw new Error('خطا در درخواست (کد ' + r.status + ')');
       return r.json();
     });
   }
 
-  // ===== بارگذاری کاربران =====
   function loadUsers() {
     const tbody = document.getElementById('userTableBody');
     tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><span>⏳</span>در حال بارگذاری...</td></tr>';
@@ -443,7 +423,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       });
   }
 
-  // ===== جستجو =====
   function searchUsers() {
     const q = document.getElementById('searchInput').value.trim().toLowerCase();
     const rows = document.querySelectorAll('#userTableBody tr');
@@ -457,12 +436,9 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
         row.style.display = 'none';
       }
     });
-    if (found === 0 && q !== '') {
-      showToast('🔍 هیچ کاربری یافت نشد', 'info');
-    }
+    if (found === 0 && q !== '') showToast('🔍 هیچ کاربری یافت نشد', 'info');
   }
 
-  // ===== مودال =====
   function openModal(title, data = null) {
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('editUuid').value = data?.uuid || '';
@@ -493,7 +469,6 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       .catch(() => showToast('خطا در دریافت اطلاعات کاربر', 'error'));
   }
 
-  // ===== ذخیره کاربر =====
   function saveUser() {
     const uuid = document.getElementById('editUuid').value;
     const data = {
@@ -520,30 +495,33 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       .catch(() => showToast('❌ خطا در ذخیره کاربر', 'error'));
   }
 
-  // ===== حذف کاربر =====
   function deleteUser(uuid) {
     if (!confirm('آیا از حذف این کاربر مطمئن هستید؟')) return;
     api('DELETE', '/users/' + uuid)
-      .then(() => {
-        loadUsers();
-        showToast('✅ کاربر حذف شد', 'success');
-      })
+      .then(() => { loadUsers(); showToast('✅ کاربر حذف شد', 'success'); })
       .catch(() => showToast('❌ خطا در حذف کاربر', 'error'));
   }
 
-  // ===== جستجوی زنده =====
-  document.getElementById('searchInput').addEventListener('input', searchUsers);
+  function changeToken() {
+    const newToken = prompt('توکن جدید را وارد کنید:', TOKEN);
+    if (newToken && newToken.trim()) {
+      localStorage.setItem('admin_token', newToken.trim());
+      document.getElementById('currentTokenDisplay').textContent = newToken.trim();
+      showToast('✅ توکن تغییر کرد. صفحه را مجدداً بارگذاری کنید.', 'success');
+      setTimeout(() => location.reload(), 1000);
+    }
+  }
 
-  // ===== بستن مودال با کلیک خارج =====
+  document.getElementById('searchInput').addEventListener('input', searchUsers);
   document.getElementById('modalOverlay').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
   });
 
-  // ===== بارگذاری اولیه =====
+  // بارگذاری اولیه
   loadUsers();
 </script>
 </body>
-</html>`,
-    { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
-  );
+</html>`, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+  });
 }
