@@ -9,10 +9,16 @@ import { handleVless }       from './protocols/vless';
 import { handleTrojan }      from './protocols/trojan';
 import { handleShadowsocks } from './protocols/shadowsocks';
 import { handleReality }     from './protocols/reality';
+import { handleHysteria2 }   from './protocols/hysteria2';
+import { handleTUIC }        from './protocols/tuic';
 import { adminAPI }          from './admin-panel';
 import { generateSingbox, generateClash, generateV2Ray } from './subscription';
 import { authenticateUser }  from './auth';
 import { serveDecoy }        from './security/decoy';
+import { handleHealthCheck, handleAdminHealthCheck } from './health';
+import { handleDomainRotator }  from './domain-rotator';
+import { handleECH }            from './ech';
+import { handleTelegramWebhook, registerTelegramWebhook } from './telegram';
 
 // ==================== تایپ‌های مسیریابی ====================
 type Handler = (request: Request, env: Env) => Promise<Response>;
@@ -25,17 +31,35 @@ interface Route {
 
 // ==================== مسیرهای تعریف‌شده ====================
 const routes: Route[] = [
-  // --- پروتکل‌ها ---
-  { method: ['GET', 'POST', 'PUT'], pattern: '/proxy/vless',       handler: handleVless },
-  { method: ['GET', 'POST', 'PUT'], pattern: '/proxy/trojan',      handler: handleTrojan },
-  { method: ['GET', 'POST', 'PUT'], pattern: '/proxy/shadowsocks', handler: handleShadowsocks },
-  { method: ['GET', 'POST', 'PUT'], pattern: /^\/proxy\/reality/,  handler: handleReality },
+  // --- پروتکل‌ها (TCP) ---
+  { method: ['GET', 'POST', 'PUT'], pattern: '/proxy/vless',          handler: handleVless       },
+  { method: ['GET', 'POST', 'PUT'], pattern: '/proxy/trojan',         handler: handleTrojan      },
+  { method: ['GET', 'POST', 'PUT'], pattern: '/proxy/shadowsocks',    handler: handleShadowsocks },
+  { method: ['GET', 'POST', 'PUT'], pattern: /^\/proxy\/reality/,     handler: handleReality     },
+
+  // --- پروتکل‌های UDP (از طریق WebSocket) ---
+  { method: ['GET', 'POST', 'PUT'], pattern: /^\/proxy\/hysteria2/,   handler: handleHysteria2   },
+  { method: ['GET', 'POST', 'PUT'], pattern: /^\/proxy\/tuic/,        handler: handleTUIC        },
+
+  // --- ECH ---
+  { method: ['GET', 'POST'], pattern: /^\/ech/,                       handler: handleECH         },
+
+  // --- Health Check ---
+  { method: 'GET',  pattern: '/health',                               handler: handleHealthCheck      },
+  { method: 'GET',  pattern: '/admin/api/health',                     handler: handleAdminHealthCheck },
+
+  // --- Domain Rotator ---
+  { method: ['GET', 'POST'], pattern: /^\/admin\/api\/domain-rotator/, handler: handleDomainRotator },
+
+  // --- Telegram Bot ---
+  { method: 'POST', pattern: '/telegram/webhook',                      handler: handleTelegramWebhook      },
+  { method: 'POST', pattern: '/admin/api/telegram/register-webhook',   handler: registerTelegramWebhook    },
 
   // --- ساب‌اسکریپشن ---
-  { method: 'GET', pattern: '/sub', handler: handleSubscription },
+  { method: 'GET', pattern: '/sub',                                    handler: handleSubscription },
 
   // --- پنل مدیریت ---
-  { method: ['GET', 'POST', 'PUT', 'DELETE'], pattern: /^\/admin/, handler: adminAPI },
+  { method: ['GET', 'POST', 'PUT', 'DELETE'], pattern: /^\/admin/,    handler: adminAPI },
 ];
 
 // ==================== مسیریاب اصلی ====================

@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT NOT NULL UNIQUE,
     uuid TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
-    protocol TEXT DEFAULT 'vless' CHECK (protocol IN ('vless', 'trojan', 'shadowsocks', 'reality')),
+    protocol TEXT DEFAULT 'vless' CHECK (protocol IN ('vless', 'trojan', 'shadowsocks', 'reality', 'hysteria2', 'tuic')),
     quota REAL DEFAULT 10,
     used REAL DEFAULT 0,
     expires_at INTEGER DEFAULT 0,
