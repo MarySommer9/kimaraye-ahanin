@@ -1,4 +1,4 @@
-﻿import { Env } from '../../types';
+import { Env } from '../../types';
 import { authenticateUser, checkQuota, increaseUsage } from '../auth';
 import { applyMorphToHeaders, getFragmentConfig } from '../security/morph';
 
@@ -34,7 +34,8 @@ async function handleVlessWebSocket(request: Request, env: Env, user: any): Prom
             const body = await response.arrayBuffer();
             server.send(body);
         } catch (err) {
-            server.send(JSON.stringify({ error: err.message }));
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            server.send(JSON.stringify({ error: errorMessage }));
         }
     });
 

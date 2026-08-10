@@ -120,12 +120,12 @@ export async function generateX25519KeyPair(): Promise<{ publicKey: string; priv
       { name: 'ECDH', namedCurve: 'X25519' } as any,
       true,
       ['deriveKey', 'deriveBits']
-    );
+    ) as CryptoKeyPair;
     const pubRaw  = await crypto.subtle.exportKey('raw', keyPair.publicKey);
     const privRaw = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
     return {
-      publicKey:  uint8ToBase64Url(new Uint8Array(pubRaw)),
-      privateKey: uint8ToBase64Url(new Uint8Array(privRaw)),
+      publicKey:  uint8ToBase64Url(new Uint8Array(pubRaw as ArrayBuffer)),
+      privateKey: uint8ToBase64Url(new Uint8Array(privRaw as ArrayBuffer)),
     };
   } catch {
     // Fallback: P-256 (سازگار با همه محیط‌ها)
@@ -133,12 +133,12 @@ export async function generateX25519KeyPair(): Promise<{ publicKey: string; priv
       { name: 'ECDH', namedCurve: 'P-256' },
       true,
       ['deriveKey', 'deriveBits']
-    );
+    ) as CryptoKeyPair;
     const pubSpki  = await crypto.subtle.exportKey('spki', keyPair.publicKey);
     const privPkcs = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
     return {
-      publicKey:  uint8ToBase64Url(new Uint8Array(pubSpki)),
-      privateKey: uint8ToBase64Url(new Uint8Array(privPkcs)),
+      publicKey:  uint8ToBase64Url(new Uint8Array(pubSpki as ArrayBuffer)),
+      privateKey: uint8ToBase64Url(new Uint8Array(privPkcs as ArrayBuffer)),
     };
   }
 }

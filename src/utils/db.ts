@@ -15,7 +15,7 @@ export async function getUserByUUID(env: Env, uuid: string): Promise<User | null
   
   if (!result) return null;
   
-  const user = result as User;
+  const user = result as unknown as User;
   await env.KV.put(`user:${uuid}`, JSON.stringify(user), { expirationTtl: 300 });
   return user;
 }

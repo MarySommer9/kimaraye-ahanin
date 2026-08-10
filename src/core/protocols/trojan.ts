@@ -66,7 +66,7 @@ async function authenticateTrojanUser(env: Env, password: string): Promise<User 
      LIMIT 1`
   ).bind(password, Date.now()).first();
 
-  if (result) return result as User;
+  if (result) return result as unknown as User;
 
   // در صورت عدم تطابق، با هش SHA-256 امتحان می‌کند
   // (برخی کلاینت‌ها رمز عبور را هش می‌کنند)
@@ -80,7 +80,7 @@ async function authenticateTrojanUser(env: Env, password: string): Promise<User 
        LIMIT 1`
     ).bind(hashedPassword, Date.now()).first();
 
-    if (result) return result as User;
+    if (result) return result as unknown as User;
   } catch {
     // نادیده گرفتن خطای هش
   }
