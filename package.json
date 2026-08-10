@@ -3,9 +3,10 @@
   "version": "3.0.0",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
+    "setup": "tsx src/setup.ts",
+    "build": "npm run setup && tsc",
     "deploy": "wrangler deploy",
-    "build": "tsc"
+    "dev": "wrangler dev"
   },
   "dependencies": {
     "hono": "^4.0.0",
@@ -14,6 +15,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
+    "tsx": "^4.7.1",
     "typescript": "^5.0.0",
     "wrangler": "^3.0.0"
   }
