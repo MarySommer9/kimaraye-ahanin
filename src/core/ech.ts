@@ -137,22 +137,22 @@ export async function generateEchKeyPair(): Promise<EchKeyPair> {
       { name: 'ECDH', namedCurve: 'X25519' },
       true,
       ['deriveKey', 'deriveBits']
-    );
+    ) as CryptoKeyPair;
     const pub  = await crypto.subtle.exportKey('raw',   kp.publicKey);
     const priv = await crypto.subtle.exportKey('pkcs8', kp.privateKey);
-    pubKeyB64  = toBase64Url(new Uint8Array(pub));
-    privKeyB64 = toBase64Url(new Uint8Array(priv));
+    pubKeyB64  = toBase64Url(new Uint8Array(pub as ArrayBuffer));
+    privKeyB64 = toBase64Url(new Uint8Array(priv as ArrayBuffer));
   } catch {
     // P-256 fallback
     const kp = await crypto.subtle.generateKey(
       { name: 'ECDH', namedCurve: 'P-256' },
       true,
       ['deriveKey', 'deriveBits']
-    );
+    ) as CryptoKeyPair;
     const pub  = await crypto.subtle.exportKey('spki',  kp.publicKey);
     const priv = await crypto.subtle.exportKey('pkcs8', kp.privateKey);
-    pubKeyB64  = toBase64Url(new Uint8Array(pub));
-    privKeyB64 = toBase64Url(new Uint8Array(priv));
+    pubKeyB64  = toBase64Url(new Uint8Array(pub as ArrayBuffer));
+    privKeyB64 = toBase64Url(new Uint8Array(priv as ArrayBuffer));
   }
 
   const keyId    = Math.floor(Math.random() * 256);

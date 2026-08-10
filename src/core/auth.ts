@@ -20,7 +20,7 @@ export async function authenticateUser(env: Env, uuid: string): Promise<User | n
 
   if (!result) return null;
 
-  const user = result as User;
+  const user = result as unknown as User;
   // ذخیره در کش به مدت ۵ دقیقه
   await env.KV.put(`user:${uuid}`, JSON.stringify(user), { expirationTtl: 300 });
   return user;
@@ -60,7 +60,7 @@ export async function listUsers(env: Env, limit = 100, offset = 0): Promise<User
      ORDER BY created_at DESC 
      LIMIT ? OFFSET ?`
   ).bind(limit, offset).all();
-  return result.results as User[];
+  return result.results as unknown as User[];
 }
 
 // ==================== به‌روزرسانی کاربر ====================
