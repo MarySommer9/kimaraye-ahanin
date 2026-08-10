@@ -14,6 +14,11 @@ CREATE TABLE IF NOT EXISTS users (
     remark TEXT
 );
 
+-- ایندکس‌ها
+CREATE INDEX IF NOT EXISTS idx_users_uuid ON users(uuid);
+CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+
 -- جدول تنظیمات
 CREATE TABLE IF NOT EXISTS config (
     key TEXT PRIMARY KEY,
@@ -23,6 +28,3 @@ CREATE TABLE IF NOT EXISTS config (
 -- درج کاربر پیش‌فرض
 INSERT OR IGNORE INTO users (id, username, uuid, password, protocol, quota, expires_at, is_active, remark)
 VALUES ('admin', 'admin', 'b831d5e8-9c7d-4b3e-a5f1-8e7d6c5b4a3f', 'Chameleon@2026', 'vless', 0, 0, 1, 'Administrator');
-
--- درج توکن ادمین در config
-INSERT OR IGNORE INTO config (key, value) VALUES ('admin_token', 'admin123');
