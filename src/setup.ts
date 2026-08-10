@@ -5,58 +5,71 @@ import path from 'path';
 
 console.log('🛠️  Running setup script...');
 
-// ===== 1. D1 Database =====
-let dbId: string | null = null;
-try {
-  const output = execSync('npx wrangler d1 list', { encoding: 'utf8' });
-  const match = output.match(/([a-f0-9-]+)\s+kimaraye-ahanin-db/);
-  if (match) {
-    dbId = match[1];
-    console.log(`✅ D1 database already exists: ${dbId}`);
-  } else {
-    console.log('📦 Creating D1 database...');
-    const createOutput = execSync('npx wrangler d1 create kimaraye-ahanin-db', { encoding: 'utf8' });
-    const idMatch = createOutput.match(/database_id\s*=\s*"([a-f0-9-]+)"/);
-    dbId = idMatch?.[1] || null;
-    console.log(`✅ D1 database created: ${dbId}`);
+// ===== تابع کمکی برای ساخت resource اگر وجود نداشت =====
+function createIfNotExists(command: string, label: string): string | null {
+  try {
+    console.log(`📦 ${label}...`);
+    const output = execSync(command, { encoding: 'utf8' });
+    console.log(`✅ ${label} created`);
+    // استخراج ID از خروجی
+    const match = output.match(/([a-f0-9-]{36})/);
+    return match?.[1] || null;
+  } catch (error: any) {
+    // اگر خطای "already exists" بود، ادامه بده
+    if (error.stderr?.includes('already exists') || error.message?.includes('already exists')) {
+      console.log(`✅ ${label} already exists, skipping`);
+      // اگر قبلاً وجود داشت، ID رو با `list` پیدا می‌کنیم
+      return findExistingId(label);
+    }
+    console.error(`❌ Failed to create ${label}:`, error);
+    return null;
   }
-} catch (err) {
-  console.error('❌ Failed to handle D1 database:', err);
-  process.exit(1);
 }
+
+// ===== پیدا کردن ID resourceهای موجود =====
+function findExistingId(label: string): string | null {
+  try {
+    // برای D1
+    if (label.includes('D1')) {
+      const output = execSync('npx wrangler d1 list', { encoding: 'utf8' });
+      const match = output.match(/([a-f0-9-]{36})\s+kimaraye-ahanin-db/);
+      return match?.[1] || null;
+    }
+    // برای KV
+    if (label.includes('KV')) {
+      const output = execSync('npx wrangler kv namespace list', { encoding: 'utf8' });
+      const match = output.match(/([a-f0-9-]{36})\s+KV/);
+      return match?.[1] || null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// ===== 1. D1 Database =====
+const dbId = createIfNotExists(
+  'npx wrangler d1 create kimaraye-ahanin-db',
+  'Creating D1 database'
+);
 
 if (!dbId) {
   console.error('❌ Could not get D1 database ID');
   process.exit(1);
 }
+console.log(`📌 D1 database ID: ${dbId}`);
 
-// ===== 2. KV Namespace (با چک کردن وجود) =====
-let kvId: string | null = null;
-try {
-  // اول لیست namespaceها رو می‌گیریم
-  const output = execSync('npx wrangler kv namespace list', { encoding: 'utf8' });
-  // چک می‌کنیم که KV وجود داره یا نه
-  const match = output.match(/([a-f0-9-]+)\s+KV/);
-  if (match) {
-    kvId = match[1];
-    console.log(`✅ KV namespace already exists: ${kvId}`);
-  } else {
-    // اگر وجود نداشت، می‌سازیمش
-    console.log('📦 Creating KV namespace...');
-    const createOutput = execSync('npx wrangler kv namespace create KV', { encoding: 'utf8' });
-    const idMatch = createOutput.match(/id\s*=\s*"([a-f0-9-]+)"/);
-    kvId = idMatch?.[1] || null;
-    console.log(`✅ KV namespace created: ${kvId}`);
-  }
-} catch (err) {
-  console.error('❌ Failed to handle KV namespace:', err);
-  process.exit(1);
-}
+// ===== 2. KV Namespace =====
+const kvId = createIfNotExists(
+  'npx wrangler kv namespace create KV',
+  'Creating KV namespace'
+);
 
 if (!kvId) {
   console.error('❌ Could not get KV namespace ID');
   process.exit(1);
 }
+console.log(`📌 KV namespace ID: ${kvId}`);
 
 // ===== 3. Update wrangler.jsonc =====
 const wranglerPath = path.join(process.cwd(), 'wrangler.jsonc');
