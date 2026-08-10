@@ -8,10 +8,9 @@ console.log('🛠️  Running setup script...');
 // ===== 1. D1 Database =====
 let dbId: string | null = null;
 try {
-  // لیست دیتابیس‌ها (خروجی متن)
   const output = execSync('npx wrangler d1 list', { encoding: 'utf8' });
-  // regex برای پیدا کردن ID
-  const match = output.match(/kimaraye-ahanin-db\s+([a-f0-9-]+)/);
+  // regex درست: اول uuid بعد اسم
+  const match = output.match(/([a-f0-9-]+)\s+kimaraye-ahanin-db/);
   if (match) {
     dbId = match[1];
     console.log(`✅ D1 database already exists: ${dbId}`);
@@ -35,10 +34,9 @@ if (!dbId) {
 // ===== 2. KV Namespace =====
 let kvId: string | null = null;
 try {
-  // لیست KV Namespaceها (خروجی متن)
   const output = execSync('npx wrangler kv namespace list', { encoding: 'utf8' });
-  // regex برای پیدا کردن ID
-  const match = output.match(/KV\s+([a-f0-9-]+)/);
+  // regex درست: اول id بعد title
+  const match = output.match(/([a-f0-9-]+)\s+KV/);
   if (match) {
     kvId = match[1];
     console.log(`✅ KV namespace already exists: ${kvId}`);
