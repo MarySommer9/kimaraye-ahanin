@@ -2,25 +2,24 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 console.log('🛠️  Running setup script...');
 
 // ===== 1. D1 Database =====
 let dbId: string | null = null;
 try {
-  const output = execSync('npx wrangler d1 list', { encoding: 'utf8' });
-  const match = output.match(/kimaraye-ahanin-db\s+([a-f0-9-]+)/);
-  if (match) {
-    dbId = match[1];
+  // لیست دیتابیس‌ها با JSON
+  const listOutput = execSync('npx wrangler d1 list --json', { encoding: 'utf8' });
+  const dbs = JSON.parse(listOutput);
+  const existing = dbs.find((db: any) => db.name === 'kimaraye-ahanin-db');
+  if (existing) {
+    dbId = existing.uuid;
     console.log(`✅ D1 database already exists: ${dbId}`);
   } else {
     console.log('📦 Creating D1 database...');
-    const createOutput = execSync('npx wrangler d1 create kimaraye-ahanin-db', { encoding: 'utf8' });
-    const idMatch = createOutput.match(/database_id\s*=\s*"([a-f0-9-]+)"/);
-    dbId = idMatch?.[1] || null;
+    const createOutput = execSync('npx wrangler d1 create kimaraye-ahanin-db --json', { encoding: 'utf8' });
+    const result = JSON.parse(createOutput);
+    dbId = result.uuid;
     console.log(`✅ D1 database created: ${dbId}`);
   }
 } catch (err) {
@@ -31,16 +30,17 @@ try {
 // ===== 2. KV Namespace =====
 let kvId: string | null = null;
 try {
-  const output = execSync('npx wrangler kv namespace list', { encoding: 'utf8' });
-  const match = output.match(/KV\s+([a-f0-9-]+)/);
-  if (match) {
-    kvId = match[1];
+  const listOutput = execSync('npx wrangler kv namespace list --json', { encoding: 'utf8' });
+  const namespaces = JSON.parse(listOutput);
+  const existing = namespaces.find((ns: any) => ns.title === 'KV');
+  if (existing) {
+    kvId = existing.id;
     console.log(`✅ KV namespace already exists: ${kvId}`);
   } else {
     console.log('📦 Creating KV namespace...');
-    const createOutput = execSync('npx wrangler kv namespace create KV', { encoding: 'utf8' });
-    const idMatch = createOutput.match(/id\s*=\s*"([a-f0-9-]+)"/);
-    kvId = idMatch?.[1] || null;
+    const createOutput = execSync('npx wrangler kv namespace create KV --json', { encoding: 'utf8' });
+    const result = JSON.parse(createOutput);
+    kvId = result.id;
     console.log(`✅ KV namespace created: ${kvId}`);
   }
 } catch (err) {
