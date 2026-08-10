@@ -5,21 +5,38 @@ import path from 'path';
 
 console.log('🛠️  Running setup script...');
 
-// ===== 1. D1 Database =====
+// ===== 1. D1 Database via Cloudflare API =====
 let dbId: string | null = null;
+const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || '6fc555b82a923d29d57511d1f1245299';
+const apiToken = process.env.CLOUDFLARE_API_TOKEN || '';
+
 try {
-  // استفاده از 'd1 get' برای دریافت مستقیم اطلاعات دیتابیس
-  const output = execSync('npx wrangler d1 get kimaraye-ahanin-db', { encoding: 'utf8' });
-  const match = output.match(/"uuid"\s*:\s*"([a-f0-9-]+)"/);
-  if (match) {
-    dbId = match[1];
-    console.log(`✅ D1 database already exists: ${dbId}`);
-  } else {
-    throw new Error('Could not parse D1 info');
+  // اول با API چک می‌کنیم که دیتابیس وجود داره یا نه
+  const listResponse = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database`,
+    {
+      headers: {
+        'Authorization': `Bearer ${apiToken}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+  const listData = await listResponse.json();
+  
+  if (listData.success && listData.result) {
+    const existing = listData.result.find((db: any) => db.name === 'kimaraye-ahanin-db');
+    if (existing) {
+      dbId = existing.uuid;
+      console.log(`✅ D1 database already exists: ${dbId}`);
+    }
   }
 } catch (err) {
-  // اگر دیتابیس وجود نداشت، بسازش
-  console.log('📦 Creating D1 database...');
+  console.log('⚠️ Could not check via API, falling back to wrangler...');
+}
+
+// اگر از طریق API پیدا نشد، با wrangler بسازش
+if (!dbId) {
+  console.log('📦 Creating D1 database via wrangler...');
   try {
     const createOutput = execSync('npx wrangler d1 create kimaraye-ahanin-db', { encoding: 'utf8' });
     const idMatch = createOutput.match(/database_id\s*=\s*"([a-f0-9-]+)"/);
@@ -40,7 +57,6 @@ if (!dbId) {
 let kvId: string | null = null;
 try {
   const output = execSync('npx wrangler kv namespace list', { encoding: 'utf8' });
-  // regex برای پیدا کردن ID از جدول خروجی
   const match = output.match(/([a-f0-9-]+)\s+KV/);
   if (match) {
     kvId = match[1];
