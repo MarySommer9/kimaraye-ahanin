@@ -243,7 +243,7 @@ export async function handleAdminHealthCheck(request: Request, env: Env): Promis
   // اطلاعات اضافی برای ادمین
   const [lastOk, userCount] = await Promise.all([
     env.KV.get('health_last_ok'),
-    env.DB.prepare('SELECT COUNT(*) as count FROM users').first().then(r => (r as any)?.count ?? 0).catch(() => 0),
+    env.DB.prepare('SELECT COUNT(*) as count FROM users').first().then((r: any) => (r as any)?.count ?? 0).catch(() => 0),
   ]);
 
   const adminStatus = {

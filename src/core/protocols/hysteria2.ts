@@ -83,7 +83,7 @@ async function handleHysteria2WS(request: Request, env: Env, user: User): Promis
   const backendAddr = await env.KV.get('hysteria2_backend');
 
   const pair  = new WebSocketPair();
-  const [client, server] = Object.values(pair);
+  const [client, server] = Object.values(pair) as any[];
 
   server.accept();
 
@@ -98,7 +98,7 @@ async function handleHysteria2WS(request: Request, env: Env, user: User): Promis
     }));
   });
 
-  server.addEventListener('message', async (event) => {
+  server.addEventListener('message', async (event: any) => {
     try {
       const byteSize = typeof event.data === 'string'
         ? new TextEncoder().encode(event.data).byteLength

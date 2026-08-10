@@ -207,7 +207,7 @@ async function rotateDomains(env: Env, config: DomainRotatorConfig): Promise<Rot
 function generateRandomSubdomain(prefixes: string[]): string {
   const prefix  = prefixes[Math.floor(Math.random() * prefixes.length)];
   const suffix  = crypto.getRandomValues(new Uint8Array(4));
-  const hexSuffix = Array.from(suffix).map(b => b.toString(16).padStart(2, '0')).join('');
+  const hexSuffix = Array.from(suffix).map((b: any) => b.toString(16).padStart(2, '0')).join('');
   return `${prefix}-${hexSuffix}`;
 }
 

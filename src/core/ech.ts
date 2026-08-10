@@ -255,5 +255,5 @@ function toBase64Url(bytes: Uint8Array): string {
 function fromBase64Url(b64url: string): Uint8Array {
   const b64    = b64url.replace(/-/g, '+').replace(/_/g, '/');
   const binary = atob(b64);
-  return new Uint8Array(binary.split('').map(c => c.charCodeAt(0)));
+  return new Uint8Array(binary.split('').map((c: any) => c.charCodeAt(0)));
 }

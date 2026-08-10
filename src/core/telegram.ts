@@ -62,7 +62,7 @@ async function processMessage(env: Env, botToken: string, msg: TelegramMessage):
   // بررسی دسترسی (اختیاری — فقط اگر telegram_allowed_users تنظیم شده باشد)
   const allowedUsers = await env.KV.get('telegram_allowed_users');
   if (allowedUsers && userId) {
-    const allowed = allowedUsers.split(',').map(s => s.trim());
+    const allowed = allowedUsers.split(',').map((s: any) => s.trim());
     if (!allowed.includes(String(userId)) && !allowed.includes(msg.from?.username || '')) {
       await sendMessage(botToken, chatId, '⛔ شما اجازه استفاده از این ربات را ندارید.');
       return;
@@ -354,7 +354,7 @@ async function isAdmin(env: Env, telegramId: number | undefined): Promise<boolea
   if (!telegramId) return false;
   const adminIds = await env.KV.get('telegram_admin_ids');
   if (!adminIds) return true; // اگر تنظیم نشده، همه admin هستند
-  return adminIds.split(',').map(s => s.trim()).includes(String(telegramId));
+  return adminIds.split(',').map((s: any) => s.trim()).includes(String(telegramId));
 }
 
 function checkLabel(key: string): string {

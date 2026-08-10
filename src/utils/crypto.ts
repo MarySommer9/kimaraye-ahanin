@@ -192,7 +192,7 @@ function uint8ToBase64Url(bytes: Uint8Array): string {
 function base64UrlToUint8(b64url: string): Uint8Array {
   const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
   const binary = atob(b64);
-  return new Uint8Array(binary.split('').map(c => c.charCodeAt(0)));
+  return new Uint8Array(binary.split('').map((c: any) => c.charCodeAt(0)));
 }
 
 // ==================== تولید رمز عبور تصادفی ====================
@@ -202,5 +202,5 @@ function base64UrlToUint8(b64url: string): Uint8Array {
 export function generateSecurePassword(length = 24): string {
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
   const values  = crypto.getRandomValues(new Uint8Array(length));
-  return Array.from(values, v => charset[v % charset.length]).join('');
+  return Array.from(values, (v: any) => charset[v % charset.length]).join('');
 }
