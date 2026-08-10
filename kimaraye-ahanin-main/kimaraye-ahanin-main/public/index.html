@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="پنل مدیریت پیشرفته کیمارای آهنین — مدیریت کاربران، مانیتورینگ و چرخش دامنه">
+  <title>🦁 کیمارای آهنین | پنل مدیریت</title>
+
+  <!-- فونت فارسی -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    /* ============================================
+       سیستم طراحی — Dark Glassmorphism + Gold
+    ============================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:          #f5c518;
+      --gold-dark:     #c9a800;
+      --gold-dim:      rgba(245,197,24,.15);
+      --gold-glow:     0 0 24px rgba(245,197,24,.25);
+      --bg:            #060610;
+      --bg-2:          #0d0d1e;
+      --glass:         rgba(13,13,30,.85);
+      --glass-border:  rgba(245,197,24,.18);
+      --glass-hover:   rgba(245,197,24,.08);
+      --text:          #e8e8f2;
+      --text-muted:    #6060a0;
+      --text-dim:      #9090c0;
+      --success:       #22c55e;
+      --danger:        #ef4444;
+      --warning:       #f59e0b;
+      --info:          #3b82f6;
+      --purple:        #a855f7;
+      --radius:        12px;
+      --radius-lg:     20px;
+      --shadow:        0 8px 32px rgba(0,0,0,.6);
+      --transition:    all .2s cubic-bezier(.4,0,.2,1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 15% 5%,  rgba(245,197,24,.06) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 90%, rgba(59,130,246,.05) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 50% 50%, rgba(168,85,247,.03) 0%, transparent 70%);
+      overflow-x: hidden;
+    }
+
+    /* ============ LAYOUT ============ */
+    .app-shell { display: flex; min-height: 100vh; }
+
+    /* ============ SIDEBAR ============ */
+    .sidebar {
+      width: 260px;
+      min-height: 100vh;
+      background: var(--glass);
+      border-left: 1px solid var(--glass-border);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      right: 0; top: 0; bottom: 0;
+      z-index: 100;
+      transition: var(--transition);
+    }
+
+    .sidebar-logo {
+      padding: 28px 20px 20px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .sidebar-logo .lion { font-size: 40px; display: block; margin-bottom: 8px; }
+    .sidebar-logo h1 { font-size: 16px; font-weight: 700; color: var(--gold); line-height: 1.3; }
+    .sidebar-logo span { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
+
+    .sidebar-nav { flex: 1; padding: 16px 12px; }
+    .nav-section-label {
+      font-size: 10px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .1em;
+      padding: 12px 10px 6px;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: var(--radius);
+      cursor: pointer; font-size: 13.5px; font-weight: 500;
+      color: var(--text-dim); transition: var(--transition);
+      border: 1px solid transparent; margin-bottom: 2px;
+      background: none; width: 100%; text-align: right;
+    }
+    .nav-item:hover { background: var(--glass-hover); color: var(--text); border-color: var(--glass-border); }
+    .nav-item.active { background: var(--gold-dim); color: var(--gold); border-color: rgba(245,197,24,.3); }
+    .nav-item .icon { font-size: 16px; flex-shrink: 0; }
+    .nav-badge {
+      margin-right: auto; background: var(--gold); color: #000;
+      font-size: 10px; font-weight: 700; padding: 1px 6px;
+      border-radius: 99px; min-width: 18px; text-align: center;
+    }
+
+    .sidebar-footer { padding: 16px; border-top: 1px solid var(--glass-border); }
+    .health-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; border-radius: var(--radius);
+      font-size: 12px; background: var(--bg-2);
+      border: 1px solid var(--glass-border);
+    }
+    .health-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; animation: pulse 2s infinite; }
+    .health-dot.ok      { background: var(--success); }
+    .health-dot.warn    { background: var(--warning); }
+    .health-dot.error   { background: var(--danger); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ============ MAIN AREA ============ */
+    .main-area {
+      margin-right: 260px;
+      flex: 1;
+      padding: 24px 28px;
+      min-height: 100vh;
+    }
+
+    /* ============ TOPBAR ============ */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--text); }
+    .page-title span { color: var(--gold); }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+    /* ============ CARDS ============ */
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+    }
+    .card-body { padding: 20px 24px; }
+    .card-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .card-title { font-size: 15px; font-weight: 600; color: var(--text); }
+
+    /* ============ STATS GRID ============ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      backdrop-filter: blur(16px);
+      position: relative; overflow: hidden;
+      transition: var(--transition);
+    }
+    .stat-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, transparent 60%, var(--accent-color, var(--gold-dim)));
+      pointer-events: none;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--gold-glow); }
+    .stat-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+    .stat-value { font-size: 28px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+    .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .stat-delta  { font-size: 11px; margin-top: 6px; }
+    .stat-delta.up   { color: var(--success); }
+    .stat-delta.down { color: var(--danger); }
+
+    /* ============ TOOLBAR ============ */
+    .toolbar {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 200px; }
+    .search-wrap input {
+      width: 100%; padding: 8px 36px 8px 12px;
+      background: var(--bg-2); border: 1px solid var(--glass-border);
+      border-radius: var(--radius); color: var(--text);
+      font-family: inherit; font-size: 13px; outline: none;
+      transition: var(--transition);
+    }
+    .search-wrap input:focus { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-dim); }
+    .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+
+    /* ============ TABLE ============ */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { border-bottom: 1px solid var(--glass-border); }
+    th {
+      padding: 10px 14px; text-align: center; font-size: 12px;
+      font-weight: 600; color: var(--text-muted); white-space: nowrap;
+      cursor: pointer; user-select: none; transition: var(--transition);
+    }
+    th:hover { color: var(--gold); }
+    th .sort-icon { font-size: 10px; margin-right: 4px; opacity: .5; }
+    th.sorted .sort-icon { opacity: 1; color: var(--gold); }
+    td { padding: 11px 14px; text-align: center; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,.04); }
+    tbody tr { transition: var(--transition); }
+    tbody tr:hover { background: var(--glass-hover); }
+    tbody tr:last-child td { border-bottom: none; }
+    .uuid-cell { font-family: monospace; font-size: 11px; color: var(--text-dim); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+    .uuid-cell:hover { color: var(--gold); }
+
+    /* ============ BADGES ============ */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600;
+    }
+    .badge-gold    { background: rgba(245,197,24,.15); color: var(--gold); }
+    .badge-success { background: rgba(34,197,94,.15);  color: var(--success); }
+    .badge-danger  { background: rgba(239,68,68,.15);  color: var(--danger); }
+    .badge-info    { background: rgba(59,130,246,.15); color: var(--info); }
+    .badge-purple  { background: rgba(168,85,247,.15); color: var(--purple); }
+    .badge-warning { background: rgba(245,158,11,.15); color: var(--warning); }
+
+    /* ============ PROGRESS BAR ============ */
+    .quota-bar-wrap { display: flex; align-items: center; gap: 8px; justify-content: center; }
+    .quota-bar { height: 6px; border-radius: 99px; background: var(--bg-2); overflow: hidden; width: 70px; flex-shrink: 0; }
+    .quota-bar-fill { height: 100%; border-radius: 99px; transition: width .4s ease; }
+    .quota-pct { font-size: 11px; color: var(--text-muted); min-width: 30px; }
+
+    /* ============ BUTTONS ============ */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: var(--radius); font-size: 13px;
+      font-weight: 500; font-family: inherit; cursor: pointer;
+      border: 1px solid transparent; transition: var(--transition); outline: none;
+      text-decoration: none; white-space: nowrap;
+    }
+    .btn-gold    { background: var(--gold); color: #000; border-color: var(--gold); }
+    .btn-gold:hover { background: var(--gold-dark); transform: translateY(-1px); box-shadow: var(--gold-glow); }
+    .btn-ghost   { background: transparent; color: var(--text-dim); border-color: var(--glass-border); }
+    .btn-ghost:hover { background: var(--glass-hover); color: var(--text); border-color: var(--gold); }
+    .btn-danger  { background: rgba(239,68,68,.12); color: var(--danger); border-color: rgba(239,68,68,.3); }
+    .btn-danger:hover { background: rgba(239,68,68,.25); }
+    .btn-success { background: rgba(34,197,94,.12); color: var(--success); border-color: rgba(34,197,94,.3); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-icon { padding: 7px; border-radius: 8px; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+
+    /* ============ MODAL ============ */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      backdrop-filter: blur(6px); z-index: 200;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal {
+      background: var(--bg-2); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); width: 100%; max-width: 480px;
+      box-shadow: var(--shadow), var(--gold-glow);
+      animation: slideUp .25s ease;
+    }
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; color: var(--gold); }
+    .modal-body  { padding: 20px 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--glass-border); display: flex; gap: 10px; justify-content: flex-start; }
+
+    /* ============ FORM ============ */
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+    .form-control {
+      width: 100%; padding: 9px 12px;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: var(--radius); color: var(--text);
+      font-family: inherit; font-size: 13px; outline: none;
+      transition: var(--transition);
+    }
+    .form-control:focus { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-dim); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ============ PAGINATION ============ */
+    .pagination {
+      display: flex; align-items: center; gap: 6px;
+      padding: 14px 20px; justify-content: center;
+      border-top: 1px solid var(--glass-border);
+    }
+    .page-btn {
+      padding: 6px 10px; border-radius: 8px; font-size: 13px;
+      background: var(--bg-2); border: 1px solid var(--glass-border);
+      color: var(--text-dim); cursor: pointer; transition: var(--transition);
+    }
+    .page-btn:hover, .page-btn.active { background: var(--gold-dim); color: var(--gold); border-color: rgba(245,197,24,.4); }
+    .page-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .page-info { font-size: 12px; color: var(--text-muted); padding: 0 8px; }
+
+    /* ============ ALERTS & TOASTS ============ */
+    .toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; border-radius: var(--radius);
+      background: var(--bg-2); border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow); font-size: 13px; min-width: 250px;
+      animation: slideInLeft .3s ease;
+    }
+    .toast.success { border-color: rgba(34,197,94,.4); }
+    .toast.error   { border-color: rgba(239,68,68,.4); }
+
+    /* ============ ANIMATIONS ============ */
+    @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+    @keyframes slideUp   { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes slideInLeft { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes spin      { to{transform:rotate(360deg)} }
+    .spin { animation: spin 1s linear infinite; display: inline-block; }
+
+    /* ============ LOGIN PAGE ============ */
+    #loginPage {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh;
+    }
+    .login-card {
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); padding: 48px 40px;
+      width: 100%; max-width: 400px;
+      box-shadow: var(--shadow), var(--gold-glow);
+      animation: slideUp .4s ease;
+    }
+    .login-card .lion { font-size: 56px; text-align: center; display: block; margin-bottom: 8px; }
+    .login-card h1 { font-size: 22px; font-weight: 800; color: var(--gold); text-align: center; margin-bottom: 4px; }
+    .login-card p  { font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 28px; }
+    .login-error { font-size: 12px; color: var(--danger); text-align: center; margin-top: 10px; min-height: 18px; }
+
+    /* ============ HEALTH PAGE ============ */
+    .health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .health-check-card {
+      padding: 20px; border-radius: var(--radius-lg);
+      background: var(--glass); border: 1px solid var(--glass-border);
+    }
+    .health-check-card.ok   { border-color: rgba(34,197,94,.35); }
+    .health-check-card.fail { border-color: rgba(239,68,68,.35); }
+    .check-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 8px; }
+    .check-status { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .check-msg { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+    .check-latency { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+    /* ============ DOMAIN PAGE ============ */
+    .domain-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 14px; border-radius: var(--radius);
+      background: var(--bg-2); border: 1px solid var(--glass-border);
+      font-size: 13px; font-family: monospace;
+    }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 768px) {
+      .sidebar { width: 0; overflow: hidden; }
+      .main-area { margin-right: 0; padding: 16px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* ============ EMPTY STATE ============ */
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; display: block; opacity: .5; }
+    .empty-state h3 { font-size: 15px; margin-bottom: 8px; color: var(--text-dim); }
+    .empty-state p  { font-size: 13px; }
+
+    [x-cloak] { display: none !important; }
+  </style>
+</head>
+<body x-data="app()" x-cloak>
+
+  <!-- ============ LOGIN PAGE ============ -->
+  <div id="loginPage" x-show="!isLoggedIn">
+    <div class="login-card">
+      <span class="lion">🦁</span>
+      <h1>کیمارای آهنین</h1>
+      <p>Iron Chimera — پنل مدیریت پیشرفته</p>
+      <div class="form-group">
+        <label class="form-label">توکن ادمین</label>
+        <input id="tokenInput" class="form-control" type="password" placeholder="توکن دسترسی را وارد کنید"
+          x-model="loginToken" @keyup.enter="doLogin()" autocomplete="current-password">
+      </div>
+      <button id="loginBtn" class="btn btn-gold" style="width:100%" @click="doLogin()" :disabled="loggingIn">
+        <span x-show="loggingIn" class="spin">⟳</span>
+        <span x-show="!loggingIn">ورود به پنل</span>
+      </button>
+      <div class="login-error" x-text="loginError"></div>
+    </div>
+  </div>
+
+  <!-- ============ MAIN APP ============ -->
+  <div class="app-shell" x-show="isLoggedIn">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <span class="lion">🦁</span>
+        <h1>کیمارای آهنین</h1>
+        <span>نسخه ۳.۰ — Cloudflare Workers</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">اصلی</div>
+        <button id="navDashboard" class="nav-item" :class="{active: page==='dashboard'}" @click="page='dashboard'">
+          <span class="icon">📊</span> داشبورد
+          <span class="nav-badge" x-text="users.length" x-show="users.length > 0"></span>
+        </button>
+        <button id="navUsers" class="nav-item" :class="{active: page==='users'}" @click="page='users'">
+          <span class="icon">👤</span> کاربران
+        </button>
+
+        <div class="nav-section-label">سیستم</div>
+        <button id="navHealth" class="nav-item" :class="{active: page==='health'}" @click="page='health'; loadHealth()">
+          <span class="icon">💚</span> سلامت سرویس
+        </button>
+        <button id="navDomains" class="nav-item" :class="{active: page==='domains'}" @click="page='domains'; loadDomains()">
+          <span class="icon">🌐</span> چرخش دامنه
+        </button>
+        <button id="navEch" class="nav-item" :class="{active: page==='ech'}" @click="page='ech'; loadEch()">
+          <span class="icon">🔐</span> مدیریت ECH
+        </button>
+        <button id="navTelegram" class="nav-item" :class="{active: page==='telegram'}" @click="page='telegram'">
+          <span class="icon">🤖</span> ربات تلگرام
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="health-badge">
+          <div class="health-dot" :class="healthDotClass"></div>
+          <span x-text="healthLabel" style="font-size:12px"></span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-area">
+
+      <!-- ======= DASHBOARD ======= -->
+      <div x-show="page==='dashboard'">
+        <div class="topbar">
+          <div class="page-title">داشبورد <span>/ نمای کلی</span></div>
+          <div class="topbar-actions">
+            <button id="refreshDashBtn" class="btn btn-ghost btn-sm" @click="loadAll()">
+              <span :class="{spin: loading}">🔄</span> بروزرسانی
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card" style="--accent-color: rgba(245,197,24,.12)">
+            <span class="stat-icon">👥</span>
+            <div class="stat-value" style="color:var(--gold)" x-text="stats.total"></div>
+            <div class="stat-label">کل کاربران</div>
+          </div>
+          <div class="stat-card" style="--accent-color: rgba(34,197,94,.12)">
+            <span class="stat-icon">✅</span>
+            <div class="stat-value" style="color:var(--success)" x-text="stats.active"></div>
+            <div class="stat-label">کاربران فعال</div>
+          </div>
+          <div class="stat-card" style="--accent-color: rgba(239,68,68,.12)">
+            <span class="stat-icon">⚠️</span>
+            <div class="stat-value" style="color:var(--danger)" x-text="stats.expired"></div>
+            <div class="stat-label">منقضی شده</div>
+          </div>
+          <div class="stat-card" style="--accent-color: rgba(59,130,246,.12)">
+            <span class="stat-icon">📦</span>
+            <div class="stat-value" style="color:var(--info)" x-text="stats.totalUsedGB + ' GB'"></div>
+            <div class="stat-label">مجموع مصرف</div>
+          </div>
+          <div class="stat-card" style="--accent-color: rgba(168,85,247,.12)">
+            <span class="stat-icon">🔢</span>
+            <div class="stat-value" style="color:var(--purple)" x-text="stats.quotaGB + ' GB'"></div>
+            <div class="stat-label">مجموع سهمیه</div>
+          </div>
+          <div class="stat-card" style="--accent-color: rgba(245,158,11,.12)">
+            <span class="stat-icon">🕐</span>
+            <div class="stat-value" style="color:var(--warning); font-size:16px" x-text="lastRefresh"></div>
+            <div class="stat-label">آخرین بروزرسانی</div>
+          </div>
+        </div>
+
+        <!-- پروتکل توزیع -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📡 توزیع پروتکل‌ها</span>
+          </div>
+          <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap">
+            <template x-for="(count, proto) in stats.protocols" :key="proto">
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg-2);border-radius:var(--radius);border:1px solid var(--glass-border)">
+                <span x-text="protoIcon(proto)" style="font-size:18px"></span>
+                <div>
+                  <div style="font-size:13px;font-weight:600" x-text="proto.toUpperCase()"></div>
+                  <div style="font-size:12px;color:var(--text-muted)" x-text="count + ' کاربر'"></div>
+                </div>
+              </div>
+            </template>
+            <div x-show="Object.keys(stats.protocols).length === 0" style="color:var(--text-muted);font-size:13px">
+              کاربری وجود ندارد
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======= USERS PAGE ======= -->
+      <div x-show="page==='users'">
+        <div class="topbar">
+          <div class="page-title">مدیریت <span>/ کاربران</span></div>
+          <div class="topbar-actions">
+            <button id="addUserBtn" class="btn btn-gold" @click="openAddModal()">➕ کاربر جدید</button>
+            <button id="refreshUsersBtn" class="btn btn-ghost btn-sm" @click="loadUsers()">
+              <span :class="{spin: loading}">🔄</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <!-- Toolbar: Search + Sort + Filter -->
+          <div class="toolbar">
+            <div class="search-wrap">
+              <input id="searchInput" type="text" placeholder="جستجو نام، UUID، پروتکل..." x-model="search" @input="currentPage=1">
+              <span class="search-icon">🔍</span>
+            </div>
+            <select id="filterProtocol" class="form-control" style="width:auto;padding:7px 10px" x-model="filterProto" @change="currentPage=1">
+              <option value="">همه پروتکل‌ها</option>
+              <option value="vless">⚡ VLESS</option>
+              <option value="trojan">🛡️ Trojan</option>
+              <option value="shadowsocks">🌑 Shadowsocks</option>
+              <option value="reality">💎 Reality</option>
+              <option value="hysteria2">🚀 Hysteria2</option>
+              <option value="tuic">🌊 TUIC v5</option>
+            </select>
+            <select id="filterStatus" class="form-control" style="width:auto;padding:7px 10px" x-model="filterStatus" @change="currentPage=1">
+              <option value="">همه وضعیت‌ها</option>
+              <option value="active">فعال</option>
+              <option value="expired">منقضی</option>
+              <option value="disabled">غیرفعال</option>
+            </select>
+            <span style="font-size:12px;color:var(--text-muted)" x-text="filteredUsers.length + ' کاربر'"></span>
+          </div>
+
+          <!-- Table -->
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th @click="sortBy('username')" :class="{sorted: sortCol==='username'}">
+                    <span class="sort-icon">⇅</span> نام کاربری
+                  </th>
+                  <th>UUID</th>
+                  <th @click="sortBy('protocol')" :class="{sorted: sortCol==='protocol'}">
+                    <span class="sort-icon">⇅</span> پروتکل
+                  </th>
+                  <th @click="sortBy('used')" :class="{sorted: sortCol==='used'}">
+                    <span class="sort-icon">⇅</span> مصرف
+                  </th>
+                  <th @click="sortBy('quota')" :class="{sorted: sortCol==='quota'}">
+                    <span class="sort-icon">⇅</span> سهمیه
+                  </th>
+                  <th @click="sortBy('expires_at')" :class="{sorted: sortCol==='expires_at'}">
+                    <span class="sort-icon">⇅</span> انقضا
+                  </th>
+                  <th>وضعیت</th>
+                  <th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template x-for="user in paginatedUsers" :key="user.uuid">
+                  <tr>
+                    <td style="font-weight:600" x-text="user.username"></td>
+                    <td>
+                      <span class="uuid-cell" :title="user.uuid" @click="copyToClipboard(user.uuid)" x-text="user.uuid.substring(0,13)+'...'"></span>
+                    </td>
+                    <td>
+                      <span class="badge" :class="protoBadge(user.protocol)">
+                        <span x-text="protoIcon(user.protocol)"></span>
+                        <span x-text="user.protocol.toUpperCase()"></span>
+                      </span>
+                    </td>
+                    <td>
+                      <div class="quota-bar-wrap">
+                        <div class="quota-bar">
+                          <div class="quota-bar-fill" :style="'width:'+quotaPct(user)+'%;background:'+quotaColor(user)"></div>
+                        </div>
+                        <span class="quota-pct" x-text="(user.used||0).toFixed(1)+' GB'"></span>
+                      </div>
+                    </td>
+                    <td x-text="user.quota === 0 ? '∞' : user.quota + ' GB'"></td>
+                    <td>
+                      <span x-text="formatExpiry(user.expires_at)" :style="isExpired(user.expires_at) ? 'color:var(--danger)' : ''"></span>
+                    </td>
+                    <td>
+                      <span class="badge" :class="statusBadge(user)">
+                        <span x-text="statusLabel(user)"></span>
+                      </span>
+                    </td>
+                    <td>
+                      <div style="display:flex;gap:6px;justify-content:center">
+                        <button class="btn btn-ghost btn-sm btn-icon" title="ویرایش" @click="openEditModal(user)">✏️</button>
+                        <button class="btn btn-success btn-sm btn-icon" title="کپی لینک اشتراک" @click="copySubLink(user)">🔗</button>
+                        <button class="btn btn-danger btn-sm btn-icon" title="حذف" @click="confirmDelete(user)">🗑️</button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+                <tr x-show="filteredUsers.length === 0 && !loading">
+                  <td colspan="8">
+                    <div class="empty-state">
+                      <span class="icon">👤</span>
+                      <h3>کاربری یافت نشد</h3>
+                      <p>جستجو را تغییر دهید یا کاربر جدید اضافه کنید</p>
+                    </div>
+                  </td>
+                </tr>
+                <tr x-show="loading">
+                  <td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">
+                    <span class="spin" style="font-size:24px">⟳</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination" x-show="totalPages > 1">
+            <button class="page-btn" @click="currentPage=1" :disabled="currentPage===1">«</button>
+            <button class="page-btn" @click="currentPage--" :disabled="currentPage===1">‹</button>
+            <template x-for="p in visiblePages" :key="p">
+              <button class="page-btn" :class="{active: p===currentPage}" @click="currentPage=p" x-text="p"></button>
+            </template>
+            <button class="page-btn" @click="currentPage++" :disabled="currentPage===totalPages">›</button>
+            <button class="page-btn" @click="currentPage=totalPages" :disabled="currentPage===totalPages">»</button>
+            <span class="page-info" x-text="'صفحه '+currentPage+' از '+totalPages"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======= HEALTH PAGE ======= -->
+      <div x-show="page==='health'">
+        <div class="topbar">
+          <div class="page-title">سلامت <span>/ مانیتورینگ سرویس</span></div>
+          <div class="topbar-actions">
+            <button id="refreshHealthBtn" class="btn btn-ghost btn-sm" @click="loadHealth()">
+              <span :class="{spin: healthLoading}">🔄</span> بررسی مجدد
+            </button>
+          </div>
+        </div>
+
+        <!-- وضعیت کلی -->
+        <div class="card" style="margin-bottom:16px" x-show="healthData">
+          <div class="card-body" style="display:flex;align-items:center;gap:16px">
+            <span style="font-size:40px" x-text="healthData?.status==='healthy'?'✅':healthData?.status==='degraded'?'⚠️':'❌'"></span>
+            <div>
+              <div style="font-size:18px;font-weight:700;margin-bottom:4px">
+                <span class="badge" :class="healthData?.status==='healthy'?'badge-success':healthData?.status==='degraded'?'badge-warning':'badge-danger'"
+                  x-text="healthData?.status?.toUpperCase()"></span>
+              </div>
+              <div style="font-size:13px;color:var(--text-muted)" x-text="healthData?.summary"></div>
+            </div>
+            <div style="margin-right:auto;text-align:left">
+              <div style="font-size:11px;color:var(--text-muted)">نسخه</div>
+              <div style="font-size:13px;font-weight:600" x-text="healthData?.version"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="health-grid">
+          <template x-for="(check, name) in healthData?.checks" :key="name">
+            <div class="health-check-card" :class="{ok: check.ok, fail: !check.ok}">
+              <div class="check-name" x-text="healthCheckLabel(name)"></div>
+              <div class="check-status" :style="check.ok?'color:var(--success)':'color:var(--danger)'" x-text="check.ok ? '✅ سالم' : '❌ خراب'"></div>
+              <div class="check-msg"   x-text="check.message"></div>
+              <div class="check-latency" x-text="'تأخیر: ' + check.latencyMs + 'ms'"></div>
+            </div>
+          </template>
+        </div>
+
+        <div class="empty-state" x-show="!healthData && !healthLoading">
+          <span class="icon">💚</span>
+          <h3>اطلاعاتی بارگذاری نشده</h3>
+          <p>برای بررسی سلامت سرویس روی «بررسی مجدد» کلیک کنید</p>
+        </div>
+        <div style="text-align:center;padding:40px;color:var(--text-muted)" x-show="healthLoading">
+          <span class="spin" style="font-size:28px">⟳</span>
+          <div style="margin-top:12px;font-size:13px">در حال بررسی سرویس‌ها...</div>
+        </div>
+      </div>
+
+      <!-- ======= DOMAINS PAGE ======= -->
+      <div x-show="page==='domains'">
+        <div class="topbar">
+          <div class="page-title">دامنه <span>/ چرخش خودکار</span></div>
+          <div class="topbar-actions">
+            <button id="forceRotateBtn" class="btn btn-gold" @click="forceRotate()" :disabled="domainLoading">
+              <span x-show="domainLoading" class="spin">⟳</span>
+              <span x-show="!domainLoading">🔄 چرخش اجباری</span>
+            </button>
+            <button id="refreshDomainsBtn" class="btn btn-ghost btn-sm" @click="loadDomains()">🔄</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px" x-show="domainStatus">
+          <div class="card-body">
+            <div style="display:flex;gap:20px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ساب‌دامین فعال</div>
+                <div style="font-size:22px;font-weight:800;color:var(--gold)" x-text="domainStatus?.count || 0"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">آخرین چرخش</div>
+                <div style="font-size:13px;font-weight:600" x-text="domainStatus?.lastRotation ? new Date(domainStatus.lastRotation).toLocaleString('fa-IR') : 'هرگز'"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">چرخش بعدی</div>
+                <div style="font-size:13px;font-weight:600" x-text="domainStatus?.nextRotation ? new Date(domainStatus.nextRotation).toLocaleString('fa-IR') : '—'"></div>
+              </div>
+              <div x-show="domainStatus?.needsRotation">
+                <span class="badge badge-warning">⚠️ نیاز به چرخش دارد</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">🌐 ساب‌دامین‌های فعال</span></div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:10px" x-show="domainStatus?.activeSubdomains?.length > 0">
+              <template x-for="rec in domainStatus?.activeSubdomains" :key="rec.fqdn">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-2);border-radius:var(--radius);border:1px solid var(--glass-border)">
+                  <div>
+                    <div class="domain-chip" x-text="rec.fqdn"></div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:4px" x-text="'ایجاد: ' + new Date(rec.createdAt).toLocaleString('fa-IR')"></div>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" @click="copyToClipboard(rec.fqdn)">📋 کپی</button>
+                </div>
+              </template>
+            </div>
+            <div class="empty-state" x-show="!domainStatus?.activeSubdomains?.length && !domainLoading">
+              <span class="icon">🌐</span>
+              <h3>ساب‌دامینی تنظیم نشده</h3>
+              <p>پیکربندی Cloudflare API را در KV تنظیم کرده و سپس چرخش اجباری را اجرا کنید</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======= ECH PAGE ======= -->
+      <div x-show="page==='ech'">
+        <div class="topbar">
+          <div class="page-title">رمزنگاری <span>/ ECH Key Management</span></div>
+          <div class="topbar-actions">
+            <button id="genEchBtn" class="btn btn-gold" @click="generateEch()" :disabled="echLoading">
+              <span x-show="echLoading" class="spin">⟳</span>
+              <span x-show="!echLoading">🔑 تولید کلید جدید</span>
+            </button>
+            <button class="btn btn-ghost btn-sm" @click="loadEch()">🔄</button>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><span class="card-title">🔐 ECH — Encrypted Client Hello</span></div>
+          <div class="card-body" style="font-size:13px;line-height:1.8;color:var(--text-dim)">
+            ECH یک استاندارد TLS 1.3 است که نام دامنه (SNI) را در دست‌دادن اولیه رمزنگاری می‌کند.
+            با فعال‌سازی ECH، ناظران شبکه نمی‌توانند ببینند شما به کدام سایت متصل می‌شوید.
+            کلیدها هر ۲۴ ساعت بهصورت خودکار تجدید می‌شوند.
+          </div>
+        </div>
+        <div class="card" x-show="echData">
+          <div class="card-header"><span class="card-title">🗝️ کلید ECH فعلی</span></div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+              <div style="background:var(--bg-2);padding:14px;border-radius:var(--radius);border:1px solid var(--glass-border)">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Config ID</div>
+                <div style="font-family:monospace;font-size:12px;word-break:break-all" x-text="echData?.configId"></div>
+              </div>
+              <div style="background:var(--bg-2);padding:14px;border-radius:var(--radius);border:1px solid var(--glass-border)">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">الگوریتم</div>
+                <div style="font-size:13px;font-weight:600;color:var(--gold)" x-text="echData?.algorithm"></div>
+              </div>
+              <div style="background:var(--bg-2);padding:14px;border-radius:var(--radius);border:1px solid var(--glass-border)">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">انقضا</div>
+                <div style="font-size:13px" x-text="echData?.expiresAt ? new Date(echData.expiresAt).toLocaleString('fa-IR') : '—'"></div>
+              </div>
+              <div style="background:var(--bg-2);padding:14px;border-radius:var(--radius);border:1px solid var(--glass-border)">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Key ID</div>
+                <div style="font-size:13px;font-family:monospace" x-text="echData?.keyId"></div>
+              </div>
+            </div>
+            <div style="margin-top:12px">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">ECHConfigList (Raw — برای Sing-box)</div>
+              <div style="display:flex;gap:8px;align-items:flex-start">
+                <textarea readonly style="flex:1;height:80px;background:var(--bg-2);border:1px solid var(--glass-border);border-radius:var(--radius);color:var(--text-dim);font-family:monospace;font-size:11px;padding:8px;resize:none" x-text="echData?.raw"></textarea>
+                <button class="btn btn-ghost btn-sm" @click="copyToClipboard(echData?.raw)">📋</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="empty-state" x-show="!echData && !echLoading">
+          <span class="icon">🔐</span>
+          <h3>کلید ECH تنظیم نشده</h3>
+          <p>روی «تولید کلید جدید» کلیک کنید تا اولین کلید ECH ساخته شود</p>
+        </div>
+        <div style="text-align:center;padding:40px;color:var(--text-muted)" x-show="echLoading">
+          <span class="spin" style="font-size:28px">⟳</span>
+          <div style="margin-top:12px;font-size:13px">در حال تولید کلید...</div>
+        </div>
+      </div>
+
+      <!-- ======= TELEGRAM PAGE ======= -->
+      <div x-show="page==='telegram'">
+        <div class="topbar">
+          <div class="page-title">ربات <span>/ تلگرام</span></div>
+          <div class="topbar-actions">
+            <button id="regWebhookBtn" class="btn btn-gold" @click="registerWebhook()" :disabled="telegramLoading">
+              <span x-show="telegramLoading" class="spin">⟳</span>
+              <span x-show="!telegramLoading">🔗 ثبت Webhook</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><span class="card-title">🤖 راه‌اندازی ربات تلگرام</span></div>
+          <div class="card-body" style="font-size:13px;line-height:2">
+            <div style="margin-bottom:16px">
+              <div style="font-weight:600;margin-bottom:8px">۱. ساخت ربات در تلگرام:</div>
+              <div style="color:var(--text-dim)">به <a href="https://t.me/BotFather" target="_blank" style="color:var(--gold)">@BotFather</a> پیام دهید و با /newbot یک ربات بسازید.</div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div style="font-weight:600;margin-bottom:8px">۲. تنظیم توکن در KV:</div>
+              <div style="background:var(--bg-2);border-radius:var(--radius);padding:10px 14px;font-family:monospace;font-size:12px;color:var(--gold)">
+                npx wrangler kv:key put --binding=KV "telegram_bot_token" "TOKEN"
+              </div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div style="font-weight:600;margin-bottom:8px">۳. ثبت Webhook:</div>
+              <div style="color:var(--text-dim)">روی دکمه «ثبت Webhook» کلیک کنید تا Worker به‌عنوان webhook ربات ثبت شود.</div>
+            </div>
+            <div>
+              <div style="font-weight:600;margin-bottom:8px">۴. دستورات ربات:</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="background:var(--bg-2);border-radius:var(--radius);padding:8px 12px;font-size:12px">
+                  <span style="color:var(--gold);font-family:monospace">/setworker https://your.workers.dev</span>
+                  <span style="color:var(--text-muted);margin-right:8px">— تنظیم آدرس Worker</span>
+                </div>
+                <div style="background:var(--bg-2);border-radius:var(--radius);padding:8px 12px;font-size:12px">
+                  <span style="color:var(--gold);font-family:monospace">/newuser ali_123</span>
+                  <span style="color:var(--text-muted);margin-right:8px">— ساخت کاربر جدید</span>
+                </div>
+                <div style="background:var(--bg-2);border-radius:var(--radius);padding:8px 12px;font-size:12px">
+                  <span style="color:var(--gold);font-family:monospace">/config</span>
+                  <span style="color:var(--text-muted);margin-right:8px">— دریافت همه کانفیگ‌ها</span>
+                </div>
+                <div style="background:var(--bg-2);border-radius:var(--radius);padding:8px 12px;font-size:12px">
+                  <span style="color:var(--gold);font-family:monospace">/status</span>
+                  <span style="color:var(--text-muted);margin-right:8px">— وضعیت سرویس</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" x-show="telegramResult">
+          <div class="card-body">
+            <div :class="telegramResult?.success ? 'badge-success' : 'badge-danger'" class="badge" style="font-size:13px;padding:8px 14px" x-text="telegramResult?.message"></div>
+            <div style="margin-top:10px;font-size:12px;color:var(--text-dim)" x-show="telegramResult?.webhookUrl">
+              Webhook URL: <code x-text="telegramResult?.webhookUrl"></code>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ======= MODAL: افزودن / ویرایش ======= -->
+  <div class="modal-backdrop" x-show="showModal" @click.self="showModal=false">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" x-text="editingUser ? '✏️ ویرایش کاربر' : '➕ کاربر جدید'"></span>
+        <button class="btn btn-ghost btn-icon btn-sm" @click="showModal=false">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="mUsername">نام کاربری *</label>
+            <input id="mUsername" class="form-control" type="text" placeholder="user_01" x-model="form.username" :disabled="!!editingUser">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="mUUID">UUID</label>
+            <input id="mUUID" class="form-control" type="text" placeholder="خودکار تولید می‌شود" x-model="form.uuid" :disabled="!!editingUser">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="mPassword">رمز عبور</label>
+            <input id="mPassword" class="form-control" type="text" placeholder="خودکار تولید می‌شود" x-model="form.password">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="mProtocol">پروتکل</label>
+            <select id="mProtocol" class="form-control" x-model="form.protocol">
+              <option value="vless">⚡ VLESS</option>
+              <option value="trojan">🛡️ Trojan</option>
+              <option value="shadowsocks">🌑 Shadowsocks</option>
+              <option value="reality">💎 Reality</option>
+              <option value="hysteria2">🚀 Hysteria2 (UDP)</option>
+              <option value="tuic">🌊 TUIC v5 (UDP)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="mQuota">سهمیه (GB) — صفر = نامحدود</label>
+            <input id="mQuota" class="form-control" type="number" min="0" x-model.number="form.quota">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="mExpiry">انقضا (روز از امروز)</label>
+            <input id="mExpiry" class="form-control" type="number" min="0" x-model.number="form.expiryDays" placeholder="0 = نامحدود">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="mRemark">یادداشت</label>
+          <input id="mRemark" class="form-control" type="text" placeholder="توضیح اختیاری" x-model="form.remark">
+        </div>
+        <div x-show="editingUser">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+            <input type="checkbox" x-model="form.is_active" style="width:16px;height:16px;accent-color:var(--gold)">
+            کاربر فعال باشد
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="saveUserBtn" class="btn btn-gold" @click="saveUser()" :disabled="saving">
+          <span x-show="saving" class="spin">⟳</span>
+          <span x-show="!saving" x-text="editingUser ? 'ذخیره تغییرات' : 'ثبت کاربر'"></span>
+        </button>
+        <button class="btn btn-ghost" @click="showModal=false">انصراف</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= TOAST NOTIFICATIONS ======= -->
+  <div class="toast-container">
+    <template x-for="toast in toasts" :key="toast.id">
+      <div class="toast" :class="toast.type">
+        <span x-text="toast.type==='success'?'✅':'❌'"></span>
+        <span x-text="toast.msg"></span>
+      </div>
+    </template>
+  </div>
+
+  <!-- ============================================
+       Alpine.js Application Logic
+  ============================================ -->
+  <script>
+    function app() {
+      return {
+        // ---- State ----
+        isLoggedIn:   false,
+        loggingIn:    false,
+        loginToken:   '',
+        loginError:   '',
+        page:         'dashboard',
+        loading:      false,
+        saving:       false,
+        users:        [],
+        toasts:       [],
+
+        // Search / Filter / Sort / Pagination
+        search:       '',
+        filterProto:  '',
+        filterStatus: '',
+        sortCol:      'created_at',
+        sortDir:      'desc',
+        currentPage:  1,
+        pageSize:     15,
+
+        // Modal
+        showModal:    false,
+        editingUser:  null,
+        form:         {},
+
+        // ECH state
+        echData:        null,
+        echLoading:     false,
+        // Telegram state
+        telegramLoading: false,
+        telegramResult:  null,
+
+        // Domains
+        domainStatus: null,
+        domainLoading: false,
+
+        // Stats cache
+        lastRefresh:  '—',
+
+        // ---- Init ----
+        init() {
+          const saved = localStorage.getItem('kia_token');
+          if (saved) { this.loginToken = saved; this.doLogin(); }
+        },
+
+        // ---- Auth ----
+        async doLogin() {
+          if (!this.loginToken.trim()) { this.loginError = 'توکن را وارد کنید'; return; }
+          this.loggingIn = true; this.loginError = '';
+          try {
+            const res = await this.api('GET', '/admin/api/health');
+            if (res.ok || res.status === 200) {
+              this.isLoggedIn = true;
+              localStorage.setItem('kia_token', this.loginToken);
+              this.loadAll();
+            } else {
+              this.loginError = 'توکن نادرست است';
+              localStorage.removeItem('kia_token');
+            }
+          } catch {
+            // اگر health آماده نبود، از users امتحان می‌کنیم
+            try {
+              const r2 = await this.api('GET', '/admin/api/users');
+              if (r2.ok) {
+                this.isLoggedIn = true;
+                localStorage.setItem('kia_token', this.loginToken);
+                this.loadAll();
+              } else {
+                this.loginError = 'توکن نادرست یا سرور در دسترس نیست';
+                localStorage.removeItem('kia_token');
+              }
+            } catch {
+              this.loginError = 'خطا در اتصال به سرور';
+            }
+          }
+          this.loggingIn = false;
+        },
+
+        // ---- API helper ----
+        async api(method, path, body) {
+          const opts = {
+            method,
+            headers: {
+              'Authorization': 'Bearer ' + this.loginToken,
+              'Content-Type': 'application/json',
+            },
+          };
+          if (body) opts.body = JSON.stringify(body);
+          return fetch(path, opts);
+        },
+
+        // ---- Load all ----
+        async loadAll() {
+          await this.loadUsers();
+          this.lastRefresh = new Date().toLocaleTimeString('fa-IR');
+        },
+
+        // ---- Users ----
+        async loadUsers() {
+          this.loading = true;
+          try {
+            const res  = await this.api('GET', '/admin/api/users');
+            const data = await res.json();
+            this.users = Array.isArray(data) ? data : [];
+          } catch {
+            this.toast('خطا در بارگذاری کاربران', 'error');
+          }
+          this.loading = false;
+        },
+
+        // ---- Computed: filtered + sorted + paginated ----
+        get filteredUsers() {
+          let list = this.users;
+          const q = this.search.toLowerCase().trim();
+
+          if (q) list = list.filter(u =>
+            u.username.toLowerCase().includes(q) ||
+            u.uuid.toLowerCase().includes(q) ||
+            (u.protocol||'').toLowerCase().includes(q) ||
+            (u.remark||'').toLowerCase().includes(q)
+          );
+          if (this.filterProto) list = list.filter(u => u.protocol === this.filterProto);
+          if (this.filterStatus === 'active')   list = list.filter(u =>  u.is_active && !this.isExpired(u.expires_at));
+          if (this.filterStatus === 'expired')  list = list.filter(u => this.isExpired(u.expires_at));
+          if (this.filterStatus === 'disabled') list = list.filter(u => !u.is_active);
+
+          // sort
+          const dir = this.sortDir === 'asc' ? 1 : -1;
+          list = [...list].sort((a, b) => {
+            const av = a[this.sortCol] ?? '';
+            const bv = b[this.sortCol] ?? '';
+            return av < bv ? -dir : av > bv ? dir : 0;
+          });
+
+          return list;
+        },
+
+        get totalPages() { return Math.ceil(this.filteredUsers.length / this.pageSize) || 1; },
+
+        get paginatedUsers() {
+          const start = (this.currentPage - 1) * this.pageSize;
+          return this.filteredUsers.slice(start, start + this.pageSize);
+        },
+
+        get visiblePages() {
+          const pages = [];
+          const start = Math.max(1, this.currentPage - 2);
+          const end   = Math.min(this.totalPages, start + 4);
+          for (let i = start; i <= end; i++) pages.push(i);
+          return pages;
+        },
+
+        sortBy(col) {
+          if (this.sortCol === col) this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+          else { this.sortCol = col; this.sortDir = 'asc'; }
+          this.currentPage = 1;
+        },
+
+        // ---- Stats ----
+        get stats() {
+          const now = Date.now();
+          const protos = {};
+          let usedGB = 0, quotaGB = 0, active = 0, expired = 0;
+          this.users.forEach(u => {
+            protos[u.protocol] = (protos[u.protocol] || 0) + 1;
+            usedGB  += u.used  || 0;
+            quotaGB += u.quota || 0;
+            if (u.is_active && !(u.expires_at && u.expires_at < now)) active++;
+            if (u.expires_at && u.expires_at < now) expired++;
+          });
+          return { total: this.users.length, active, expired, totalUsedGB: usedGB.toFixed(1), quotaGB, protocols: protos };
+        },
+
+        // ---- Health ----
+        async loadHealth() {
+          this.healthLoading = true;
+          try {
+            const res  = await this.api('GET', '/admin/api/health');
+            this.healthData = await res.json();
+          } catch {
+            this.toast('خطا در دریافت وضعیت سلامت', 'error');
+          }
+          this.healthLoading = false;
+        },
+
+        // ---- ECH ----
+        async loadEch() {
+          this.echLoading = true;
+          try {
+            const res = await this.api('GET', '/ech/config');
+            if (res.ok) this.echData = await res.json();
+            else this.echData = null;
+          } catch { this.echData = null; }
+          this.echLoading = false;
+        },
+
+        async generateEch() {
+          if (!confirm('یک کلید ECH جدید تولید می‌شود. کلید قبلی غیرفعال خواهد شد. ادامه می‌دهید؟')) return;
+          this.echLoading = true;
+          try {
+            const res  = await this.api('POST', '/ech/keygen');
+            const data = await res.json();
+            if (res.ok && data.success) {
+              this.toast('کلید ECH با موفقیت تولید شد ✅', 'success');
+              await this.loadEch();
+            } else {
+              this.toast(data.error || 'خطا در تولید کلید', 'error');
+            }
+          } catch {
+            this.toast('خطای شبکه', 'error');
+          }
+          this.echLoading = false;
+        },
+
+        // ---- Telegram ----
+        async registerWebhook() {
+          if (!confirm('Webhook ربات تلگرام روی این Worker ثبت می‌شود. ادامه می‌دهید؟')) return;
+          this.telegramLoading = true;
+          this.telegramResult  = null;
+          try {
+            const res  = await this.api('POST', '/admin/api/telegram/register-webhook');
+            this.telegramResult = await res.json();
+            this.toast(this.telegramResult?.success ? 'Webhook ثبت شد ✅' : 'خطا در ثبت', this.telegramResult?.success ? 'success' : 'error');
+          } catch {
+            this.toast('خطای شبکه', 'error');
+          }
+          this.telegramLoading = false;
+        },
+
+        get healthDotClass() {
+          if (!this.healthData) return 'warn';
+          return { healthy: 'ok', degraded: 'warn', unhealthy: 'error' }[this.healthData.status] || 'warn';
+        },
+        get healthLabel() {
+          if (!this.healthData) return 'نامشخص';
+          return { healthy: '✅ سالم', degraded: '⚠️ جزئی', unhealthy: '❌ خراب' }[this.healthData.status] || '—';
+        },
+
+        healthCheckLabel(name) { return { database: '🗄️ دیتابیس D1', kv: '📦 KV Namespace', runtime: '⚡ Worker Runtime' }[name] || name; },
+
+        // ---- Domains ----
+        async loadDomains() {
+          this.domainLoading = true;
+          try {
+            const res = await this.api('GET', '/admin/api/domain-rotator?action=status');
+            this.domainStatus = await res.json();
+          } catch {
+            this.toast('خطا در دریافت وضعیت دامنه', 'error');
+          }
+          this.domainLoading = false;
+        },
+
+        async forceRotate() {
+          if (!confirm('آیا از چرخش اجباری دامنه‌ها مطمئنید؟')) return;
+          this.domainLoading = true;
+          try {
+            const res  = await this.api('POST', '/admin/api/domain-rotator?action=force');
+            const data = await res.json();
+            this.toast(data.message || 'چرخش انجام شد', data.success ? 'success' : 'error');
+            await this.loadDomains();
+          } catch {
+            this.toast('خطا در چرخش دامنه', 'error');
+          }
+          this.domainLoading = false;
+        },
+
+        // ---- Modal ----
+        openAddModal() {
+          this.editingUser = null;
+          this.form = { username:'', uuid:'', password:'', protocol:'vless', quota:10, expiryDays:30, remark:'', is_active:true };
+          this.showModal = true;
+        },
+        openEditModal(user) {
+          this.editingUser = user;
+          this.form = {
+            username: user.username, uuid: user.uuid, password: user.password,
+            protocol: user.protocol, quota: user.quota,
+            expiryDays: user.expires_at ? Math.ceil((user.expires_at - Date.now()) / 86400000) : 0,
+            remark: user.remark || '', is_active: !!user.is_active,
+          };
+          this.showModal = true;
+        },
+
+        async saveUser() {
+          if (!this.form.username) { this.toast('نام کاربری الزامی است', 'error'); return; }
+          this.saving = true;
+          try {
+            const body = {
+              username:   this.form.username,
+              uuid:       this.form.uuid || undefined,
+              password:   this.form.password || undefined,
+              protocol:   this.form.protocol,
+              quota:      this.form.quota,
+              expires_at: this.form.expiryDays > 0 ? Date.now() + this.form.expiryDays * 86400000 : 0,
+              remark:     this.form.remark,
+              is_active:  this.form.is_active ? 1 : 0,
+            };
+            let res;
+            if (this.editingUser) {
+              res = await this.api('PUT', '/admin/api/users/' + this.editingUser.uuid, body);
+            } else {
+              res = await this.api('POST', '/admin/api/users', body);
+            }
+            if (res.ok) {
+              this.toast(this.editingUser ? 'کاربر ویرایش شد' : 'کاربر افزوده شد', 'success');
+              this.showModal = false;
+              await this.loadUsers();
+            } else {
+              this.toast('خطا در ذخیره', 'error');
+            }
+          } catch {
+            this.toast('خطای شبکه', 'error');
+          }
+          this.saving = false;
+        },
+
+        async confirmDelete(user) {
+          if (!confirm(`آیا از حذف کاربر "${user.username}" مطمئنید؟`)) return;
+          try {
+            await this.api('DELETE', '/admin/api/users/' + user.uuid);
+            this.toast('کاربر حذف شد', 'success');
+            await this.loadUsers();
+          } catch {
+            this.toast('خطا در حذف', 'error');
+          }
+        },
+
+        // ---- Helpers ----
+        quotaPct(u) {
+          if (!u.quota || u.quota === 0) return 0;
+          return Math.min(100, Math.round((u.used || 0) / u.quota * 100));
+        },
+        quotaColor(u) {
+          const pct = this.quotaPct(u);
+          return pct >= 90 ? 'var(--danger)' : pct >= 70 ? 'var(--warning)' : 'var(--success)';
+        },
+        isExpired(ts) { return ts && ts > 0 && ts < Date.now(); },
+        formatExpiry(ts) {
+          if (!ts || ts === 0) return '♾️ نامحدود';
+          const d = new Date(ts);
+          return d.toLocaleDateString('fa-IR');
+        },
+        statusBadge(u) {
+          if (!u.is_active) return 'badge-danger';
+          if (this.isExpired(u.expires_at)) return 'badge-warning';
+          return 'badge-success';
+        },
+        statusLabel(u) {
+          if (!u.is_active) return '⛔ غیرفعال';
+          if (this.isExpired(u.expires_at)) return '⏰ منقضی';
+          return '✅ فعال';
+        },
+        protoIcon(p) { return {vless:'⚡',trojan:'🛡️',shadowsocks:'🌑',reality:'💎',hysteria2:'🚀',tuic:'🌊'}[p] || '🔗'; },
+        protoBadge(p) { return {vless:'badge-gold',trojan:'badge-info',shadowsocks:'badge-purple',reality:'badge-success',hysteria2:'badge-warning',tuic:'badge-danger'}[p] || 'badge-info'; },
+
+        copyToClipboard(text) {
+          navigator.clipboard.writeText(text).then(() => this.toast('کپی شد ✓', 'success'));
+        },
+        copySubLink(user) {
+          const host = window.location.host;
+          const link = `https://${host}/sub?uuid=${user.uuid}&format=text`;
+          this.copyToClipboard(link);
+        },
+
+        // ---- Toast ----
+        toast(msg, type = 'success') {
+          const id = Date.now();
+          this.toasts.push({ id, msg, type });
+          setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3500);
+        },
+      };
+    }
+  </script>
+</body>
+</html>
