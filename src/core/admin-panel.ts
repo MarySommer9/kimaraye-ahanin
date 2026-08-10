@@ -1,5 +1,5 @@
 // ============================================
-// 🦁 کیمارای آهنین - پنل مدیریت
+// 🦁 کیمارای آهنین - پنل مدیریت حرفه‌ای
 // ============================================
 
 import { Env, User } from '../types';
@@ -8,25 +8,24 @@ import { listUsers, createUser, updateUser, deleteUser } from './auth';
 export async function adminAPI(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
 
-  // فقط از KV بخون
-  const adminToken = await env.KV.get('admin_token') || 'admin123';
+  // === احراز هویت ===
+  const adminToken = env.ADMIN_TOKEN || (await env.KV.get('admin_token')) || 'admin123';
   const authHeader = request.headers.get('Authorization');
   const token = authHeader?.replace('Bearer ', '') || '';
 
   if (!token || token !== adminToken) {
-    return new Response('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Bearer' }
-    });
+    return new Response('Unauthorized', { status: 401 });
   }
 
-  // ===== مسیرها =====
+  // === API ها ===
 
+  // GET /admin/api/users
   if (url.pathname === '/admin/api/users' && request.method === 'GET') {
     const users = await listUsers(env);
     return Response.json(users);
   }
 
+  // POST /admin/api/users
   if (url.pathname === '/admin/api/users' && request.method === 'POST') {
     try {
       const data = await request.json() as Partial<User>;
@@ -37,6 +36,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     }
   }
 
+  // PUT /admin/api/users/:uuid
   if (url.pathname.startsWith('/admin/api/users/') && request.method === 'PUT') {
     const uuid = url.pathname.split('/').pop();
     if (!uuid) return Response.json({ error: 'Missing UUID' }, { status: 400 });
@@ -49,6 +49,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     }
   }
 
+  // DELETE /admin/api/users/:uuid
   if (url.pathname.startsWith('/admin/api/users/') && request.method === 'DELETE') {
     const uuid = url.pathname.split('/').pop();
     if (!uuid) return Response.json({ error: 'Missing UUID' }, { status: 400 });
@@ -60,312 +61,487 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     }
   }
 
-  // صفحه مدیریت
-  return new Response(`
-    <!DOCTYPE html>
-    <html lang="fa" dir="rtl">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>کیمارای آهنین - مدیریت</title>
-      <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-          font-family: 'Vazir', Tahoma, sans-serif;
-          background: #0a0a0f;
-          color: #eee;
-          padding: 20px;
-          min-height: 100vh;
-          display: flex;
-          justify-content: center;
-          align-items: flex-start;
+  // === صفحه HTML پنل مدیریت ===
+  return new Response(
+    `<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>کیمارای آهنین · مدیریت</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, 'Vazir', sans-serif;
+      background: #0b0b12;
+      color: #e8e8f0;
+      padding: 24px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .container {
+      max-width: 1300px;
+      width: 100%;
+      background: rgba(18, 18, 32, 0.85);
+      backdrop-filter: blur(6px);
+      border-radius: 28px;
+      padding: 28px 32px;
+      border: 1px solid rgba(255, 204, 0, 0.08);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+    }
+    /* هدر */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #ffcc00;
+      padding-bottom: 16px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .logo {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffcc00;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo span { color: #ffaa00; font-weight: 300; }
+    .badge {
+      background: rgba(0, 255, 100, 0.12);
+      color: #0f0;
+      padding: 6px 18px;
+      border-radius: 40px;
+      font-size: 13px;
+      border: 1px solid rgba(0, 255, 100, 0.15);
+    }
+    /* نوار ابزار */
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 10px 24px;
+      background: #ffcc00;
+      color: #0b0b12;
+      border: none;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 14px rgba(255, 204, 0, 0.15);
+    }
+    .btn:hover { transform: translateY(-2px); background: #ffe066; box-shadow: 0 8px 24px rgba(255, 204, 0, 0.25); }
+    .btn-outline {
+      background: transparent;
+      color: #ccc;
+      border: 1px solid #3a3a4e;
+      box-shadow: none;
+    }
+    .btn-outline:hover { background: #1e1e30; border-color: #ffcc00; color: #fff; }
+    .btn-danger {
+      background: #dc3545;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(220, 53, 69, 0.2);
+    }
+    .btn-danger:hover { background: #c82333; box-shadow: 0 8px 24px rgba(220, 53, 69, 0.3); }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+    /* جدول */
+    .table-wrap { overflow-x: auto; border-radius: 16px; border: 1px solid #1e1e30; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 700px;
+    }
+    th {
+      background: #14141f;
+      color: #ffcc00;
+      font-weight: 600;
+      padding: 14px 12px;
+      text-align: center;
+      border-bottom: 2px solid #2a2a40;
+      white-space: nowrap;
+    }
+    td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #1a1a2a;
+      color: #d0d0e0;
+      vertical-align: middle;
+    }
+    tr:hover td { background: #161625; }
+    .uuid-cell { font-family: monospace; font-size: 12px; color: #8a8aaa; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 12px;
+      border-radius: 40px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-active { background: rgba(0, 255, 100, 0.12); color: #0f0; }
+    .status-expired { background: rgba(255, 70, 70, 0.12); color: #ff5555; }
+    /* مودال */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #1a1a2e;
+      border-radius: 24px;
+      padding: 32px 36px;
+      max-width: 520px;
+      width: 100%;
+      border: 1px solid rgba(255, 204, 0, 0.08);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.7);
+      animation: modalFade 0.25s ease;
+    }
+    @keyframes modalFade {
+      from { opacity:0; transform:scale(0.95) translateY(20px); }
+      to   { opacity:1; transform:scale(1) translateY(0); }
+    }
+    .modal h3 {
+      color: #ffcc00;
+      font-size: 22px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .modal label {
+      display: block;
+      color: #a0a0b8;
+      font-size: 13px;
+      margin-bottom: 4px;
+      margin-top: 12px;
+    }
+    .modal input, .modal select {
+      width: 100%;
+      padding: 10px 14px;
+      background: #0e0e1a;
+      border: 1px solid #2a2a40;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: 0.2s;
+    }
+    .modal input:focus, .modal select:focus { border-color: #ffcc00; box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.1); }
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .modal-actions .btn { flex: 1; justify-content: center; }
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      padding: 14px 24px;
+      border-radius: 16px;
+      color: #fff;
+      font-weight: 500;
+      font-size: 14px;
+      opacity: 0;
+      transform: translateX(40px);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+      max-width: 400px;
+    }
+    .toast.show { opacity: 1; transform: translateX(0); }
+    .toast-success { background: #10b981; }
+    .toast-error { background: #ef4444; }
+    .toast-info { background: #3b82f6; }
+    /* خالی */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #5a5a72;
+    }
+    .empty-state span { font-size: 48px; display: block; margin-bottom: 12px; }
+    /* واکنش‌گرا */
+    @media (max-width: 768px) {
+      .container { padding: 16px; }
+      .logo { font-size: 20px; }
+      .header { flex-direction: column; align-items: flex-start; }
+      .toolbar { flex-direction: column; }
+      .btn { width: 100%; justify-content: center; }
+      .modal { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- هدر -->
+  <div class="header">
+    <div class="logo">🦁 کیمارای <span>آهنین</span></div>
+    <div>
+      <span class="badge">✅ پنل مدیریت</span>
+    </div>
+  </div>
+
+  <!-- نوار ابزار -->
+  <div class="toolbar">
+    <button class="btn" onclick="openAddModal()">➕ افزودن کاربر</button>
+    <button class="btn btn-outline" onclick="loadUsers()">🔄 بارگذاری مجدد</button>
+    <button class="btn btn-outline" onclick="searchUsers()">🔍 جستجو</button>
+    <input type="text" id="searchInput" placeholder="جستجو در کاربران..." style="flex:1;min-width:160px;padding:10px 16px;border-radius:40px;border:1px solid #2a2a40;background:#0e0e1a;color:#fff;outline:none;">
+  </div>
+
+  <!-- جدول -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>نام کاربری</th>
+          <th>UUID</th>
+          <th>پروتکل</th>
+          <th>سهمیه (GB)</th>
+          <th>مصرف</th>
+          <th>انقضا</th>
+          <th>وضعیت</th>
+          <th>عملیات</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody">
+        <tr><td colspan="8" class="empty-state"><span>⏳</span>در حال بارگذاری...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- مودال افزودن/ویرایش -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">➕ افزودن کاربر جدید</h3>
+    <input type="hidden" id="editUuid" />
+    <label>نام کاربری</label>
+    <input type="text" id="f_username" placeholder="نام کاربری" />
+    <label>UUID (اختیاری)</label>
+    <input type="text" id="f_uuid" placeholder="UUID (خالی = خودکار)" />
+    <label>رمز عبور (اختیاری)</label>
+    <input type="text" id="f_password" placeholder="رمز عبور (خالی = خودکار)" />
+    <label>پروتکل</label>
+    <select id="f_protocol">
+      <option value="vless">VLESS</option>
+      <option value="trojan">Trojan</option>
+      <option value="shadowsocks">Shadowsocks</option>
+      <option value="reality">Reality</option>
+      <option value="hysteria2">Hysteria2</option>
+      <option value="tuic">TUIC</option>
+    </select>
+    <label>سهمیه (GB)</label>
+    <input type="number" id="f_quota" value="10" />
+    <label>انقضا (روز از امروز)</label>
+    <input type="number" id="f_expires" value="30" />
+    <div class="modal-actions">
+      <button class="btn" id="modalSaveBtn" onclick="saveUser()">💾 ذخیره</button>
+      <button class="btn btn-outline" onclick="closeModal()">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  // ===== تنظیمات =====
+  const TOKEN = 'admin123'; // یا از env بگیرید
+  const API_BASE = '/admin/api';
+
+  // ===== توابع کمکی =====
+  function showToast(msg, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const el = document.createElement('div');
+    el.className = 'toast toast-' + type;
+    el.textContent = msg;
+    container.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(() => el.remove(), 400);
+    }, 3000);
+  }
+
+  function api(method, path, body = null) {
+    const opts = {
+      method,
+      headers: { 'Authorization': 'Bearer ' + TOKEN }
+    };
+    if (body) {
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(body);
+    }
+    return fetch(API_BASE + path, opts).then(r => {
+      if (!r.ok) throw new Error('خطا در درخواست');
+      return r.json();
+    });
+  }
+
+  // ===== بارگذاری کاربران =====
+  function loadUsers() {
+    const tbody = document.getElementById('userTableBody');
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><span>⏳</span>در حال بارگذاری...</td></tr>';
+    api('GET', '/users')
+      .then(data => {
+        if (!data || data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><span>📭</span>هیچ کاربری یافت نشد</td></tr>';
+          return;
         }
-        .container {
-          max-width: 1200px;
-          width: 100%;
-          background: rgba(20,20,35,0.85);
-          border-radius: 16px;
-          padding: 24px;
-          border: 1px solid rgba(255,204,0,0.1);
-        }
-        .header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          border-bottom: 2px solid #ffcc00;
-          padding-bottom: 12px;
-          margin-bottom: 24px;
-          flex-wrap: wrap;
-          gap: 12px;
-        }
-        .logo {
-          font-size: 28px;
-          font-weight: bold;
-          color: #ffcc00;
-        }
-        .logo span { color: #ffaa00; }
-        .toolbar {
-          display: flex;
-          gap: 12px;
-          margin-bottom: 20px;
-          flex-wrap: wrap;
-        }
-        .btn {
-          padding: 10px 20px;
-          background: #ffcc00;
-          color: #000;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: bold;
-          transition: 0.2s;
-        }
-        .btn:hover { background: #ffaa00; transform: scale(1.02); }
-        .btn-danger { background: #ff4444; color: #fff; }
-        .btn-danger:hover { background: #cc0000; }
-        .btn-secondary { background: #333; color: #eee; }
-        .btn-secondary:hover { background: #444; }
-        .table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        .table th {
-          background: #1a1a2e;
-          padding: 10px;
-          border: 1px solid #2a2a3e;
-          color: #ffcc00;
-        }
-        .table td {
-          padding: 10px;
-          border: 1px solid #2a2a3e;
-          color: #ccc;
-        }
-        .table tr:hover { background: #1a1a2e; }
-        .modal {
-          display: none;
-          position: fixed;
-          top: 0; left: 0;
-          width: 100%; height: 100%;
-          background: rgba(0,0,0,0.8);
-          justify-content: center;
-          align-items: center;
-          z-index: 1000;
-        }
-        .modal-content {
-          background: #1a1a2e;
-          padding: 30px;
-          border-radius: 12px;
-          width: 90%;
-          max-width: 480px;
-          border: 1px solid rgba(255,204,0,0.2);
-        }
-        .modal-content h3 { color: #ffcc00; margin-bottom: 16px; text-align: center; }
-        .modal-content input, .modal-content select {
-          width: 100%;
-          padding: 10px 12px;
-          margin: 6px 0 14px 0;
-          background: #0a0a0f;
-          border: 1px solid #333;
-          border-radius: 6px;
-          color: #fff;
-          font-size: 14px;
-        }
-        .modal-content input:focus, .modal-content select:focus {
-          border-color: #ffcc00;
-        }
-        .modal-actions {
-          display: flex;
-          gap: 10px;
-          margin-top: 16px;
-          justify-content: flex-end;
-        }
-        .modal-actions .btn { flex: 1; }
-        .toast {
-          position: fixed;
-          bottom: 30px;
-          right: 30px;
-          padding: 14px 24px;
-          border-radius: 8px;
-          color: #fff;
-          font-weight: bold;
-          z-index: 2000;
-          opacity: 0;
-          transform: translateY(20px);
-          transition: all 0.3s;
-        }
-        .toast.show { opacity: 1; transform: translateY(0); }
-        .toast.success { background: #00aa44; }
-        .toast.error { background: #cc2233; }
-        .toast.info { background: #2266cc; }
-        .empty-state { text-align: center; padding: 40px 20px; color: #666; }
-        @media (max-width: 768px) {
-          .container { padding: 16px; }
-          .header { flex-direction: column; align-items: flex-start; }
-          .logo { font-size: 22px; }
-          .toolbar { flex-direction: column; }
-          .btn { width: 100%; text-align: center; }
-          .table th, .table td { padding: 6px; font-size: 12px; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <div class="logo">🦁 کیمارای آهنین <span>| مدیریت</span></div>
-          <div><span style="color:#0f0;">✅ متصل</span></div>
-        </div>
-        <div class="toolbar">
-          <button class="btn" onclick="showAddUser()">➕ افزودن کاربر</button>
-          <button class="btn btn-secondary" onclick="loadUsers()">🔄 بارگذاری مجدد</button>
-        </div>
-        <table class="table">
-          <thead>
+        tbody.innerHTML = data.map(u => {
+          const expires = u.expires_at ? new Date(u.expires_at).toLocaleDateString('fa-IR') : 'نامحدود';
+          const used = u.used ? u.used.toFixed(2) : '0';
+          const status = u.expires_at && u.expires_at < Date.now() ? 'منقضی' : 'فعال';
+          const statusClass = status === 'فعال' ? 'status-active' : 'status-expired';
+          return \`
             <tr>
-              <th>نام کاربری</th>
-              <th>UUID</th>
-              <th>پروتکل</th>
-              <th>سهمیه (GB)</th>
-              <th>مصرف</th>
-              <th>انقضا</th>
-              <th>عملیات</th>
+              <td><strong>\${u.username}</strong></td>
+              <td class="uuid-cell">\${u.uuid}</td>
+              <td>\${u.protocol}</td>
+              <td>\${u.quota}</td>
+              <td>\${used}</td>
+              <td>\${expires}</td>
+              <td><span class="status-badge \${statusClass}">\${status}</span></td>
+              <td>
+                <button class="btn btn-sm" onclick="editUser('\${u.uuid}')">✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteUser('\${u.uuid}')">🗑️</button>
+              </td>
             </tr>
-          </thead>
-          <tbody id="userList"><tr><td colspan="7" class="empty-state">⏳ در حال بارگذاری...</td></tr></tbody>
-        </table>
-      </div>
+          \`;
+        }).join('');
+      })
+      .catch(err => {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state" style="color:#ff5555;"><span>❌</span>' + err.message + '</td></tr>';
+        showToast('خطا در بارگذاری کاربران', 'error');
+      });
+  }
 
-      <div id="addUserModal" class="modal">
-        <div class="modal-content">
-          <h3>➕ افزودن کاربر جدید</h3>
-          <label>نام کاربری</label>
-          <input type="text" id="username" placeholder="نام کاربری">
-          <label>UUID (اختیاری)</label>
-          <input type="text" id="uuid" placeholder="UUID (اختیاری)">
-          <label>رمز عبور (اختیاری)</label>
-          <input type="text" id="password" placeholder="رمز (اختیاری)">
-          <label>پروتکل</label>
-          <select id="protocol">
-            <option value="vless">VLESS</option>
-            <option value="trojan">Trojan</option>
-            <option value="shadowsocks">Shadowsocks</option>
-            <option value="reality">Reality</option>
-            <option value="hysteria2">Hysteria2</option>
-            <option value="tuic">TUIC</option>
-          </select>
-          <label>سهمیه (GB)</label>
-          <input type="number" id="quota" value="10">
-          <label>انقضا (روز)</label>
-          <input type="number" id="expires" value="30">
-          <div class="modal-actions">
-            <button class="btn" onclick="addUser()">✅ ثبت</button>
-            <button class="btn btn-secondary" onclick="closeModal()">❌ انصراف</button>
-          </div>
-        </div>
-      </div>
+  // ===== جستجو =====
+  function searchUsers() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const rows = document.querySelectorAll('#userTableBody tr');
+    let found = 0;
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      if (text.includes(q) || q === '') {
+        row.style.display = '';
+        found++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+    if (found === 0 && q !== '') {
+      showToast('🔍 هیچ کاربری یافت نشد', 'info');
+    }
+  }
 
-      <div id="toast" class="toast"></div>
+  // ===== مودال =====
+  function openModal(title, data = null) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('editUuid').value = data?.uuid || '';
+    document.getElementById('f_username').value = data?.username || '';
+    document.getElementById('f_uuid').value = data?.uuid || '';
+    document.getElementById('f_password').value = '';
+    document.getElementById('f_protocol').value = data?.protocol || 'vless';
+    document.getElementById('f_quota').value = data?.quota || 10;
+    document.getElementById('f_expires').value = 30;
+    document.getElementById('modalOverlay').classList.add('open');
+  }
 
-      <script>
-        const TOKEN = 'admin123';
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
 
-        function showToast(msg, type = 'success') {
-          const t = document.getElementById('toast');
-          t.textContent = msg;
-          t.className = 'toast ' + type + ' show';
-          clearTimeout(t._timer);
-          t._timer = setTimeout(() => t.classList.remove('show'), 3000);
-        }
+  function openAddModal() {
+    openModal('➕ افزودن کاربر جدید');
+  }
 
-        function loadUsers() {
-          const tbody = document.getElementById('userList');
-          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">⏳ در حال بارگذاری...</td></tr>';
-          fetch('/admin/api/users', {
-            headers: { 'Authorization': 'Bearer ' + TOKEN }
-          })
-          .then(res => res.ok ? res.json() : Promise.reject('Unauthorized'))
-          .then(data => {
-            if (!data || data.length === 0) {
-              tbody.innerHTML = '<tr><td colspan="7" class="empty-state">📭 هیچ کاربری یافت نشد</td></tr>';
-              return;
-            }
-            tbody.innerHTML = data.map(u => \`
-              <tr>
-                <td>\${u.username}</td>
-                <td style="font-size:12px;font-family:monospace;">\${u.uuid}</td>
-                <td>\${u.protocol}</td>
-                <td>\${u.quota}</td>
-                <td>\${u.used?.toFixed(2) || 0}</td>
-                <td>\${u.expires_at ? new Date(u.expires_at).toLocaleDateString('fa-IR') : 'نامحدود'}</td>
-                <td>
-                  <button class="btn" onclick="editUser('\${u.uuid}')" style="padding:4px 12px;font-size:12px;">✏️</button>
-                  <button class="btn btn-danger" onclick="removeUser('\${u.uuid}')" style="padding:4px 12px;font-size:12px;">🗑️</button>
-                </td>
-              </tr>
-            \`).join('');
-          })
-          .catch(() => {
-            tbody.innerHTML = '<tr><td colspan="7" class="empty-state" style="color:#ff4444;">❌ خطا در بارگذاری</td></tr>';
-            showToast('خطا در بارگذاری کاربران', 'error');
-          });
-        }
+  function editUser(uuid) {
+    api('GET', '/users')
+      .then(data => {
+        const user = data.find(u => u.uuid === uuid);
+        if (!user) { showToast('کاربر یافت نشد', 'error'); return; }
+        openModal('✏️ ویرایش کاربر', user);
+      })
+      .catch(() => showToast('خطا در دریافت اطلاعات کاربر', 'error'));
+  }
 
-        function showAddUser() {
-          document.getElementById('addUserModal').style.display = 'flex';
-        }
-        function closeModal() {
-          document.getElementById('addUserModal').style.display = 'none';
-        }
-
-        function addUser() {
-          const data = {
-            username: document.getElementById('username').value.trim(),
-            uuid: document.getElementById('uuid').value.trim() || undefined,
-            password: document.getElementById('password').value.trim() || undefined,
-            protocol: document.getElementById('protocol').value,
-            quota: parseFloat(document.getElementById('quota').value) || 10,
-            expires_at: Date.now() + (parseInt(document.getElementById('expires').value) || 30) * 86400000
-          };
-          if (!data.username) {
-            showToast('❌ نام کاربری الزامی است', 'error');
-            return;
-          }
-          fetch('/admin/api/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
-            body: JSON.stringify(data)
-          })
-          .then(res => res.json())
-          .then(() => {
-            closeModal();
-            loadUsers();
-            showToast('✅ کاربر افزوده شد', 'success');
-            document.getElementById('username').value = '';
-            document.getElementById('uuid').value = '';
-            document.getElementById('password').value = '';
-          })
-          .catch(() => showToast('❌ خطا در افزودن کاربر', 'error'));
-        }
-
-        function removeUser(uuid) {
-          if (!confirm('حذف کاربر؟')) return;
-          fetch('/admin/api/users/' + uuid, {
-            method: 'DELETE',
-            headers: { 'Authorization': 'Bearer ' + TOKEN }
-          })
-          .then(() => { loadUsers(); showToast('✅ کاربر حذف شد', 'success'); })
-          .catch(() => showToast('❌ خطا در حذف', 'error'));
-        }
-
-        function editUser(uuid) {
-          showToast('✏️ ویرایش کاربر: ' + uuid + ' (به‌زودی)', 'info');
-        }
-
-        document.getElementById('addUserModal').addEventListener('click', function(e) {
-          if (e.target === this) closeModal();
-        });
-
+  // ===== ذخیره کاربر =====
+  function saveUser() {
+    const uuid = document.getElementById('editUuid').value;
+    const data = {
+      username: document.getElementById('f_username').value.trim(),
+      uuid: document.getElementById('f_uuid').value.trim() || undefined,
+      password: document.getElementById('f_password').value.trim() || undefined,
+      protocol: document.getElementById('f_protocol').value,
+      quota: parseFloat(document.getElementById('f_quota').value) || 10,
+      expires_at: Date.now() + (parseInt(document.getElementById('f_expires').value) || 30) * 86400000
+    };
+    if (!data.username) {
+      showToast('❌ نام کاربری الزامی است', 'error');
+      return;
+    }
+    const isEdit = !!uuid;
+    const method = isEdit ? 'PUT' : 'POST';
+    const path = isEdit ? '/users/' + uuid : '/users';
+    api(method, path, data)
+      .then(() => {
+        closeModal();
         loadUsers();
-      </script>
-    </body>
-    </html>
-  `, {
-    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        showToast(isEdit ? '✅ کاربر بروزرسانی شد' : '✅ کاربر افزوده شد', 'success');
+      })
+      .catch(() => showToast('❌ خطا در ذخیره کاربر', 'error'));
+  }
+
+  // ===== حذف کاربر =====
+  function deleteUser(uuid) {
+    if (!confirm('آیا از حذف این کاربر مطمئن هستید؟')) return;
+    api('DELETE', '/users/' + uuid)
+      .then(() => {
+        loadUsers();
+        showToast('✅ کاربر حذف شد', 'success');
+      })
+      .catch(() => showToast('❌ خطا در حذف کاربر', 'error'));
+  }
+
+  // ===== جستجوی زنده =====
+  document.getElementById('searchInput').addEventListener('input', searchUsers);
+
+  // ===== بستن مودال با کلیک خارج =====
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
   });
+
+  // ===== بارگذاری اولیه =====
+  loadUsers();
+</script>
+</body>
+</html>`,
+    { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+  );
 }
