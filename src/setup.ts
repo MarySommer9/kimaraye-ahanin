@@ -8,13 +8,13 @@ console.log('🛠️  Running setup script...');
 // ===== تابع: گرفتن ID دیتابیس D1 =====
 function getD1DatabaseId(name: string): string | null {
   try {
-    // تلاش با JSON
+    // D1 list --json در Wrangler 4 کار می‌کنه
     const output = execSync(`npx wrangler d1 list --json`, { encoding: 'utf8' });
     const databases = JSON.parse(output);
     const db = databases.find((d: any) => d.name === name);
     return db?.uuid || db?.id || null;
   } catch {
-    // اگر JSON کار نکرد، با regex از خروجی متن
+    // اگر --json کار نکرد، با regex از خروجی متن
     try {
       const output = execSync(`npx wrangler d1 list`, { encoding: 'utf8' });
       const match = output.match(new RegExp(`([a-f0-9-]{36})\\s+${name}`));
@@ -26,10 +26,10 @@ function getD1DatabaseId(name: string): string | null {
 }
 
 // ===== تابع: گرفتن ID KV Namespace =====
-function getKVNamespaceId(title: string): string | null {
+function getKvNamespaceId(title: string): string | null {
   try {
-    // تلاش با JSON
-    const output = execSync(`npx wrangler kv namespace list --json`, { encoding: 'utf8' });
+    // KV list بدون --json (خروجی پیش‌فرض JSON هست)
+    const output = execSync(`npx wrangler kv namespace list`, { encoding: 'utf8' });
     const namespaces = JSON.parse(output);
     const ns = namespaces.find((n: any) => n.title === title);
     return ns?.id || null;
@@ -45,65 +45,65 @@ function getKVNamespaceId(title: string): string | null {
   }
 }
 
-// ===== 1. D1 Database =====
-const dbName = 'kimaraye-ahanin-db';
-console.log(`🔍 Checking D1 database "${dbName}"...`);
+// ===== تابع: ساخت resource اگر وجود نداشت =====
+function ensureResource(
+  name: string,
+  type: 'd1' | 'kv',
+  createCommand: string,
+  getId: () => string | null
+): string {
+  console.log(`🔍 Checking ${type} "${name}"...`);
+  
+  // ۱. اول ببین وجود داره یا نه
+  let id = getId();
+  if (id) {
+    console.log(`✅ ${type} already exists: ${id}`);
+    return id;
+  }
 
-let dbId = getD1DatabaseId(dbName);
-if (dbId) {
-  console.log(`✅ D1 database already exists: ${dbId}`);
-} else {
-  console.log('📦 Creating D1 database...');
+  // ۲. اگر وجود نداشت، بسازش
+  console.log(`📦 Creating ${type}...`);
   try {
-    execSync(`npx wrangler d1 create ${dbName}`, { stdio: 'inherit' });
+    execSync(createCommand, { stdio: 'inherit' });
     // بعد از ساخت، دوباره ID رو بگیر
-    dbId = getD1DatabaseId(dbName);
-    if (dbId) {
-      console.log(`✅ D1 database created: ${dbId}`);
-    } else {
-      console.error('❌ D1 database created but could not retrieve ID');
-      process.exit(1);
+    id = getId();
+    if (id) {
+      console.log(`✅ ${type} created: ${id}`);
+      return id;
     }
-  } catch (err) {
-    console.error('❌ Failed to create D1 database:', err);
+    // اگر ID پیدا نشد، ارور بده
+    console.error(`❌ ${type} created but could not retrieve ID`);
+    process.exit(1);
+  } catch (err: any) {
+    // اگه خطای "already exists" بود، دوباره ID رو بگیر
+    if (err.stderr?.includes('already exists') || err.message?.includes('already exists')) {
+      console.log(`⏳ ${type} already exists (detected from error), checking again...`);
+      id = getId();
+      if (id) {
+        console.log(`✅ ${type} already exists: ${id}`);
+        return id;
+      }
+    }
+    console.error(`❌ Failed to create ${type}:`, err);
     process.exit(1);
   }
 }
 
-if (!dbId) {
-  console.error('❌ Could not get D1 database ID');
-  process.exit(1);
-}
+// ===== 1. D1 Database =====
+const dbId = ensureResource(
+  'kimaraye-ahanin-db',
+  'D1 database',
+  'npx wrangler d1 create kimaraye-ahanin-db',
+  () => getD1DatabaseId('kimaraye-ahanin-db')
+);
 
 // ===== 2. KV Namespace =====
-const kvTitle = 'KV';
-console.log(`🔍 Checking KV namespace "${kvTitle}"...`);
-
-let kvId = getKVNamespaceId(kvTitle);
-if (kvId) {
-  console.log(`✅ KV namespace already exists: ${kvId}`);
-} else {
-  console.log('📦 Creating KV namespace...');
-  try {
-    execSync(`npx wrangler kv namespace create ${kvTitle}`, { stdio: 'inherit' });
-    // بعد از ساخت، دوباره ID رو بگیر
-    kvId = getKVNamespaceId(kvTitle);
-    if (kvId) {
-      console.log(`✅ KV namespace created: ${kvId}`);
-    } else {
-      console.error('❌ KV namespace created but could not retrieve ID');
-      process.exit(1);
-    }
-  } catch (err) {
-    console.error('❌ Failed to create KV namespace:', err);
-    process.exit(1);
-  }
-}
-
-if (!kvId) {
-  console.error('❌ Could not get KV namespace ID');
-  process.exit(1);
-}
+const kvId = ensureResource(
+  'KV',
+  'KV namespace',
+  'npx wrangler kv namespace create KV',
+  () => getKvNamespaceId('KV')
+);
 
 // ===== 3. Update wrangler.jsonc =====
 const wranglerPath = path.join(process.cwd(), 'wrangler.jsonc');
@@ -123,7 +123,7 @@ try {
 // ===== 4. Run schema on D1 =====
 try {
   console.log('📊 Running schema on D1...');
-  execSync(`npx wrangler d1 execute ${dbName} --file=./database/schema.sql`, { stdio: 'inherit' });
+  execSync('npx wrangler d1 execute kimaraye-ahanin-db --file=./database/schema.sql', { stdio: 'inherit' });
   console.log('✅ Schema executed successfully');
 } catch (err) {
   console.error('❌ Failed to execute schema:', err);
