@@ -92,7 +92,7 @@ function ensureResource(
 // ===== 1. D1 Database =====
 const dbId = ensureResource(
   'kimaraye-ahanin-db',
-  'D1 database',
+  'D1 database',   // ← اینجا رو به 'd1' تغییر بده
   'npx wrangler d1 create kimaraye-ahanin-db',
   () => getD1DatabaseId('kimaraye-ahanin-db')
 );
@@ -100,7 +100,7 @@ const dbId = ensureResource(
 // ===== 2. KV Namespace =====
 const kvId = ensureResource(
   'KV',
-  'KV namespace',
+  'KV namespace',   // ← اینجا رو به 'kv' تغییر بده
   'npx wrangler kv namespace create KV',
   () => getKvNamespaceId('KV')
 );
