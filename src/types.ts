@@ -5,8 +5,8 @@
 export interface Env {
   DB: D1Database;
   KV: KVNamespace;
-  ADMIN_TOKEN?: string; 
-  ENVIRONMENT?: string;
+  ADMIN_TOKEN: string; 
+  ENVIRONMENT: string;
 }
 
 export interface User {
