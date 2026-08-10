@@ -11,7 +11,9 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
   // === احراز هویت ===
   const adminToken = env.ADMIN_TOKEN || (await env.KV.get('admin_token')) || 'admin123';
   const authHeader = request.headers.get('Authorization');
-  const token = authHeader?.replace('Bearer ', '') || '';
+  const queryToken = url.searchParams.get('token') || '';
+  const token = authHeader?.replace('Bearer ', '') || queryToken || '';
+
 
   if (!token || token !== adminToken) {
     return new Response('Unauthorized', { status: 401 });
