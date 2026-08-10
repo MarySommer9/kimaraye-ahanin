@@ -1,5 +1,5 @@
 // ============================================
-// 🦁 کیمارای آهنین - پنل مدیریت (نسخه نهایی)
+// 🦁 کیمارای آهنین - پنل مدیریت (نسخه نهایی با اولویت URL)
 // ============================================
 
 import { Env, User } from '../types';
@@ -8,8 +8,16 @@ import { listUsers, createUser, updateUser, deleteUser } from './auth';
 export async function adminAPI(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
 
-  // === احراز هویت ===
-  const adminToken = env.ADMIN_TOKEN || (await env.KV.get('admin_token')) || 'admin123';
+  // ===== احراز هویت با اولویت URL =====
+  // ۱. توکن از URL (مثلاً ?token=...)
+  const urlToken = url.searchParams.get('token');
+  // ۲. توکن از Environment Variable
+  const envToken = env.ADMIN_TOKEN;
+  // ۳. توکن از KV
+  const kvToken = await env.KV?.get('admin_token');
+  // ۴. پیش‌فرض
+  const adminToken = urlToken || envToken || kvToken || 'admin123';
+
   const authHeader = request.headers.get('Authorization');
   const token = authHeader?.replace('Bearer ', '') || '';
 
@@ -17,7 +25,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  // === API ها ===
+  // ===== API ها =====
   if (url.pathname === '/admin/api/users' && request.method === 'GET') {
     const users = await listUsers(env);
     return Response.json(users);
@@ -56,7 +64,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     }
   }
 
-  // === صفحه HTML ===
+  // ===== صفحه HTML =====
   return new Response(`<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -95,29 +103,10 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       flex-wrap: wrap;
       gap: 12px;
     }
-    .logo {
-      font-size: 28px;
-      font-weight: 700;
-      color: #ffcc00;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .logo { font-size: 28px; font-weight: 700; color: #ffcc00; display: flex; align-items: center; gap: 8px; }
     .logo span { color: #ffaa00; font-weight: 300; }
-    .badge {
-      background: rgba(0, 255, 100, 0.12);
-      color: #0f0;
-      padding: 6px 18px;
-      border-radius: 40px;
-      font-size: 13px;
-      border: 1px solid rgba(0, 255, 100, 0.15);
-    }
-    .toolbar {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-    }
+    .badge { background: rgba(0, 255, 100, 0.12); color: #0f0; padding: 6px 18px; border-radius: 40px; font-size: 13px; border: 1px solid rgba(0, 255, 100, 0.15); }
+    .toolbar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
     .btn {
       padding: 10px 24px;
       background: #ffcc00;
@@ -133,51 +122,19 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       gap: 6px;
       box-shadow: 0 4px 14px rgba(255, 204, 0, 0.15);
     }
-    .btn:hover { transform: translateY(-2px); background: #ffe066; box-shadow: 0 8px 24px rgba(255, 204, 0, 0.25); }
-    .btn-outline {
-      background: transparent;
-      color: #ccc;
-      border: 1px solid #3a3a4e;
-      box-shadow: none;
-    }
+    .btn:hover { transform: translateY(-2px); background: #ffe066; }
+    .btn-outline { background: transparent; color: #ccc; border: 1px solid #3a3a4e; box-shadow: none; }
     .btn-outline:hover { background: #1e1e30; border-color: #ffcc00; color: #fff; }
-    .btn-danger {
-      background: #dc3545;
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(220, 53, 69, 0.2);
-    }
+    .btn-danger { background: #dc3545; color: #fff; }
     .btn-danger:hover { background: #c82333; }
     .btn-sm { padding: 6px 14px; font-size: 12px; }
     .table-wrap { overflow-x: auto; border-radius: 16px; border: 1px solid #1e1e30; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-      min-width: 700px;
-    }
-    th {
-      background: #14141f;
-      color: #ffcc00;
-      font-weight: 600;
-      padding: 14px 12px;
-      text-align: center;
-      border-bottom: 2px solid #2a2a40;
-    }
-    td {
-      padding: 12px;
-      text-align: center;
-      border-bottom: 1px solid #1a1a2a;
-      color: #d0d0e0;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 700px; }
+    th { background: #14141f; color: #ffcc00; font-weight: 600; padding: 14px 12px; text-align: center; border-bottom: 2px solid #2a2a40; }
+    td { padding: 12px; text-align: center; border-bottom: 1px solid #1a1a2a; color: #d0d0e0; }
     tr:hover td { background: #161625; }
     .uuid-cell { font-family: monospace; font-size: 12px; color: #8a8aaa; }
-    .status-badge {
-      display: inline-block;
-      padding: 2px 12px;
-      border-radius: 40px;
-      font-size: 12px;
-      font-weight: 500;
-    }
+    .status-badge { display: inline-block; padding: 2px 12px; border-radius: 40px; font-size: 12px; font-weight: 500; }
     .status-active { background: rgba(0, 255, 100, 0.12); color: #0f0; }
     .status-expired { background: rgba(255, 70, 70, 0.12); color: #ff5555; }
     .modal-overlay {
@@ -250,10 +207,14 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       background: rgba(255, 204, 0, 0.08);
       border: 1px solid rgba(255, 204, 0, 0.15);
       border-radius: 12px;
-      padding: 16px 20px;
+      padding: 12px 20px;
       margin-bottom: 20px;
       color: #ccc;
       font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }
     .token-notice strong { color: #ffcc00; }
     @media (max-width: 768px) {
@@ -263,6 +224,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
       .toolbar { flex-direction: column; }
       .btn { width: 100%; justify-content: center; }
       .modal { padding: 24px; }
+      .token-notice { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -275,15 +237,15 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
   </div>
 
   <div class="token-notice">
-    🔑 توکن فعلی: <strong id="currentTokenDisplay">—</strong>
-    <button class="btn btn-sm btn-outline" onclick="changeToken()" style="margin-right:12px;">تغییر توکن</button>
+    <span>🔑 توکن فعلی: <strong id="currentTokenDisplay">—</strong></span>
+    <button class="btn btn-sm btn-outline" onclick="changeToken()" style="margin-right:auto;">تغییر توکن</button>
+    <button class="btn btn-sm btn-outline" onclick="copyToken()">📋 کپی توکن</button>
   </div>
 
   <div class="toolbar">
     <button class="btn" onclick="openAddModal()">➕ افزودن کاربر</button>
     <button class="btn btn-outline" onclick="loadUsers()">🔄 بارگذاری مجدد</button>
-    <button class="btn btn-outline" onclick="searchUsers()">🔍 جستجو</button>
-    <input type="text" id="searchInput" placeholder="جستجو در کاربران..." style="flex:1;min-width:160px;padding:10px 16px;border-radius:40px;border:1px solid #2a2a40;background:#0e0e1a;color:#fff;outline:none;">
+    <input type="text" id="searchInput" placeholder="🔍 جستجو در کاربران..." style="flex:1;min-width:160px;padding:10px 16px;border-radius:40px;border:1px solid #2a2a40;background:#0e0e1a;color:#fff;outline:none;">
   </div>
 
   <div class="table-wrap">
@@ -348,12 +310,10 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
   const tokenFromStorage = localStorage.getItem('admin_token');
   const TOKEN = tokenFromUrl || tokenFromStorage || 'admin123';
 
-  // ذخیره توکن در localStorage
-  if (tokenFromUrl) {
+  if (tokenFromUrl && tokenFromUrl !== tokenFromStorage) {
     localStorage.setItem('admin_token', TOKEN);
   }
 
-  // نمایش توکن در صفحه
   document.getElementById('currentTokenDisplay').textContent = TOKEN;
 
   const API_BASE = '/admin/api';
@@ -455,9 +415,7 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     document.getElementById('modalOverlay').classList.remove('open');
   }
 
-  function openAddModal() {
-    openModal('➕ افزودن کاربر جدید');
-  }
+  function openAddModal() { openModal('➕ افزودن کاربر جدید'); }
 
   function editUser(uuid) {
     api('GET', '/users')
@@ -507,9 +465,28 @@ export async function adminAPI(request: Request, env: Env): Promise<Response> {
     if (newToken && newToken.trim()) {
       localStorage.setItem('admin_token', newToken.trim());
       document.getElementById('currentTokenDisplay').textContent = newToken.trim();
-      showToast('✅ توکن تغییر کرد. صفحه را مجدداً بارگذاری کنید.', 'success');
-      setTimeout(() => location.reload(), 1000);
+      showToast('✅ توکن تغییر کرد. صفحه مجدداً بارگذاری می‌شود...', 'success');
+      setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('token', newToken.trim());
+        window.location.href = url.toString();
+      }, 1000);
     }
+  }
+
+  function copyToken() {
+    navigator.clipboard?.writeText(TOKEN).then(() => {
+      showToast('✅ توکن کپی شد', 'success');
+    }).catch(() => {
+      // Fallback
+      const input = document.createElement('input');
+      input.value = TOKEN;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      input.remove();
+      showToast('✅ توکن کپی شد', 'success');
+    });
   }
 
   document.getElementById('searchInput').addEventListener('input', searchUsers);
